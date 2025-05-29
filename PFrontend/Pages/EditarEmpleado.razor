@@ -41,11 +41,23 @@ else
         </div>
         <div class="mb-3">
             <label class="form-label">Departamento</label>
-            <InputNumber @bind-Value="empleado.DepartamentoId" class="form-control" />
+            <InputSelect @bind-Value="empleado.DepartamentoId" class="form-control">
+                <option value="">-- Selecciona un departamento --</option>
+                @foreach (var dep in departamentos)
+                {
+                    <option value="@dep.Id">@dep.Nombre</option>
+                }
+            </InputSelect>
         </div>
         <div class="mb-3">
             <label class="form-label">Puesto</label>
-            <InputNumber @bind-Value="empleado.PuestoId" class="form-control" />
+            <InputSelect @bind-Value="empleado.PuestoId" class="form-control">
+                <option value="">-- Selecciona un puesto --</option>
+                @foreach (var pst in puestos)
+                {
+                    <option value="@pst.Id">@pst.Nombre</option>
+                }
+            </InputSelect>
         </div>
 
         <button type="submit" class="btn btn-primary">Guardar cambios</button>
@@ -57,16 +69,22 @@ else
     [Parameter] public int id { get; set; }
 
     private EmpleadoEditDTO? empleado;
+    private List<DepartamentoModelV2> departamentos = new();
+    private List<PuestoModelV2> puestos = new();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            // Cargar catálogos antes de cargar empleado para evitar error de combos vacíos.
+            departamentos = await Http.GetFromJsonAsync<List<DepartamentoModelV2>>("https://localhost:7185/api/Departamento") ?? new List<DepartamentoModelV2>();
+            puestos = await Http.GetFromJsonAsync<List<PuestoModelV2>>("https://localhost:7185/api/Puesto") ?? new List<PuestoModelV2>();
+
             empleado = await Http.GetFromJsonAsync<EmpleadoEditDTO>($"api/Empleados/{id}");
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error al cargar empleado: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Error al cargar datos: {ex.Message}");
         }
     }
 

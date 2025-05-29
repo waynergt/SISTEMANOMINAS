@@ -14,7 +14,6 @@
 <EditForm Model="empleado" OnValidSubmit="GuardarEmpleado">
     <DataAnnotationsValidator />
     <ValidationSummary />
-
     <div class="mb-3">
         <label class="form-label">Nombre</label>
         <InputText class="form-control" @bind-Value="empleado.Nombre" />
@@ -36,12 +35,24 @@
         <InputNumber class="form-control" @bind-Value="empleado.Salario" />
     </div>
     <div class="mb-3">
-        <label class="form-label">Departamento ID</label>
-        <InputNumber class="form-control" @bind-Value="empleado.DepartamentoId" />
+        <label class="form-label">Departamento</label>
+        <InputSelect class="form-control" @bind-Value="empleado.DepartamentoId">
+            <option value="">-- Selecciona un departamento --</option>
+            @foreach (var dep in departamentos)
+            {
+                <option value="@dep.Id">@dep.Nombre</option>
+            }
+        </InputSelect>
     </div>
     <div class="mb-3">
-        <label class="form-label">Puesto ID</label>
-        <InputNumber class="form-control" @bind-Value="empleado.PuestoId" />
+        <label class="form-label">Puesto</label>
+        <InputSelect class="form-control" @bind-Value="empleado.PuestoId">
+            <option value="">-- Selecciona un puesto --</option>
+            @foreach (var pst in puestos)
+            {
+                <option value="@pst.Id">@pst.Nombre</option>
+            }
+        </InputSelect>
     </div>
     <button type="submit" class="btn btn-success">Guardar</button>
     <button type="button" class="btn btn-secondary ms-2" @onclick="Volver">Cancelar</button>
@@ -62,9 +73,24 @@
 
 @code {
     private Empleado empleado = new Empleado();
+    private List<DepartamentoModelV2> departamentos = new();
+    private List<PuestoModelV2> puestos = new();
     private string mensaje = "";
     private string error = "";
     private string jsonDebug = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            departamentos = await Http.GetFromJsonAsync<List<DepartamentoModelV2>>("https://localhost:7185/api/Departamento") ?? new List<DepartamentoModelV2>();
+            puestos = await Http.GetFromJsonAsync<List<PuestoModelV2>>("https://localhost:7185/api/Puesto") ?? new List<PuestoModelV2>();
+        }
+        catch (Exception ex)
+        {
+            error = $"Error al cargar catálogos: {ex.Message}";
+        }
+    }
 
     private async Task GuardarEmpleado()
     {

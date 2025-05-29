@@ -15,13 +15,13 @@
         }
     }
 
-    public class Departamento
+    public class DepartamentoModel
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
     }
 
-    public class Puesto
+    public class PuestoModel
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
