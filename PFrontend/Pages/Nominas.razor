@@ -4,6 +4,16 @@
 
 <h3>Nóminas</h3>
 
+<!-- Mensajes de error y éxito -->
+@if (mensajeError != null)
+{
+    <div class="alert alert-danger">@mensajeError</div>
+}
+@if (mensajeExito != null)
+{
+    <div class="alert alert-success">@mensajeExito</div>
+}
+
 @if (nominas == null)
 {
     <p><em>Cargando...</em></p>
@@ -28,7 +38,7 @@ else
                     <td>@nomina.Id</td>
                     <td>@nomina.NombreEmpleado</td>
                     <td>@nomina.FechaPago.ToShortDateString()</td>
-                    <td>@nomina.MontoTotal.ToString("C")</td>
+                    <td>@nomina.MontoTotal.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-GT"))</td>
                     <td>
                         <button class="btn btn-sm btn-primary" @onclick="() => MostrarEditar(nomina)">Editar</button>
                         <button class="btn btn-sm btn-danger" @onclick="() => EliminarNomina(nomina.Id)">Eliminar</button>
@@ -44,6 +54,7 @@ else
     <EditForm Model="nominaActual" OnValidSubmit="GuardarNomina">
         <DataAnnotationsValidator />
         <ValidationSummary />
+
         <div class="mb-2">
             <label>Empleado:</label>
             <select class="form-control" @bind="nominaActual.EmpleadoId" required>
@@ -60,15 +71,21 @@ else
                     <option disabled>Cargando empleados...</option>
                 }
             </select>
+            <ValidationMessage For="@(() => nominaActual.EmpleadoId)" />
         </div>
+
         <div class="mb-2">
             <label>Fecha de Pago:</label>
             <InputDate class="form-control" @bind-Value="nominaActual.FechaPago" />
+            <ValidationMessage For="@(() => nominaActual.FechaPago)" />
         </div>
+
         <div class="mb-2">
             <label>Monto Total:</label>
             <InputNumber class="form-control" @bind-Value="nominaActual.MontoTotal" />
+            <ValidationMessage For="@(() => nominaActual.MontoTotal)" />
         </div>
+
         <button class="btn btn-primary" type="submit">Guardar</button>
         <button class="btn btn-secondary ms-2" type="button" @onclick="CerrarFormulario">Cancelar</button>
     </EditForm>
@@ -81,9 +98,12 @@ else
     bool mostrarFormulario = false;
     bool esEdicion = false;
 
+    string? mensajeError = null;
+    string? mensajeExito = null;
+
     protected override async Task OnInitializedAsync()
     {
-        await CargarEmpleados(); // Cargar empleados primero
+        await CargarEmpleados();
         await CargarNominas();
     }
 
@@ -100,7 +120,7 @@ else
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error cargando empleados: {ex.Message}");
+            mensajeError = $"Error cargando empleados: {ex.Message}";
             empleados = new List<EmpleadoDto>();
         }
     }
@@ -110,6 +130,8 @@ else
         nominaActual = new NominaDto { FechaPago = DateTime.Today };
         esEdicion = false;
         mostrarFormulario = true;
+        mensajeError = null;
+        mensajeExito = null;
     }
 
     void MostrarEditar(NominaDto nomina)
@@ -123,36 +145,59 @@ else
             };
         esEdicion = true;
         mostrarFormulario = true;
+        mensajeError = null;
+        mensajeExito = null;
     }
 
     async Task GuardarNomina()
     {
-        if (esEdicion)
+        mensajeError = null;
+        mensajeExito = null;
+        try
         {
-            await Http.PutAsJsonAsync($"api/Nomina/{nominaActual.Id}", nominaActual);
+            if (esEdicion)
+            {
+                await Http.PutAsJsonAsync($"api/Nomina/{nominaActual.Id}", nominaActual);
+                mensajeExito = "Nómina editada correctamente.";
+            }
+            else
+            {
+                await Http.PostAsJsonAsync("api/Nomina", nominaActual);
+                mensajeExito = "Nómina guardada correctamente.";
+            }
+            mostrarFormulario = false;
+            await CargarNominas();
         }
-        else
+        catch (Exception ex)
         {
-            await Http.PostAsJsonAsync("api/Nomina", nominaActual);
+            mensajeError = "Error al guardar la nómina: " + ex.Message;
         }
-        mostrarFormulario = false;
-        await CargarNominas();
-        StateHasChanged();
     }
 
     async Task EliminarNomina(int id)
     {
+        mensajeError = null;
+        mensajeExito = null;
         if (await JS.InvokeAsync<bool>("confirm", "¿Seguro que deseas eliminar esta nómina?"))
         {
-            await Http.DeleteAsync($"api/Nomina/{id}");
-            await CargarNominas();
-            StateHasChanged();
+            try
+            {
+                await Http.DeleteAsync($"api/Nomina/{id}");
+                await CargarNominas();
+                mensajeExito = "Nómina eliminada correctamente.";
+            }
+            catch (Exception ex)
+            {
+                mensajeError = "Error al eliminar la nómina: " + ex.Message;
+            }
         }
     }
 
     void CerrarFormulario()
     {
         mostrarFormulario = false;
+        mensajeError = null;
+        mensajeExito = null;
     }
 
     public class NominaDto

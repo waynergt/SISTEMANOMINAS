@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProyectoNominas.API.Data;
 using ProyectoNominas.API.Domain.Entities;
-using ProyectoNominas.API.Dtos;
+using ProyectoNominas.API.DTO;
 
 namespace ProyectoNominas.API.Controllers
 {
@@ -60,10 +60,15 @@ namespace ProyectoNominas.API.Controllers
         [HttpPost]
         public async Task<ActionResult> PostNomina(NominaDto dto)
         {
+            if (dto.FechaPago == null)
+            {
+                return BadRequest("La fecha de pago no puede ser nula.");
+            }
+
             var nomina = new Nomina
             {
-                FechaPago = dto.FechaPago,
-                MontoTotal = dto.MontoTotal,
+                FechaPago = dto.FechaPago.Value, // Explicitly convert nullable DateTime to non-nullable
+                MontoTotal = dto.MontoTotal ?? 0, // Provide a default value for nullable decimal
                 EmpleadoId = dto.EmpleadoId
             };
 
@@ -79,8 +84,13 @@ namespace ProyectoNominas.API.Controllers
             var nomina = await _context.Nominas.FindAsync(id);
             if (nomina == null) return NotFound();
 
-            nomina.FechaPago = dto.FechaPago;
-            nomina.MontoTotal = dto.MontoTotal;
+            if (dto.FechaPago == null)
+            {
+                return BadRequest("La fecha de pago no puede ser nula.");
+            }
+
+            nomina.FechaPago = dto.FechaPago.Value; // Explicitly convert nullable DateTime to non-nullable
+            nomina.MontoTotal = dto.MontoTotal ?? 0; // Provide a default value for nullable decimal
             nomina.EmpleadoId = dto.EmpleadoId;
 
             await _context.SaveChangesAsync();
