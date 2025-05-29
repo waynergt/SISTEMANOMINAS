@@ -1,0 +1,52 @@
+﻿@page "/reportes"
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<h3>📄 Reportes PDF</h3>
+
+<div class="d-grid gap-2">
+    <button class="btn btn-primary" @onclick="DescargarNomina">📄 Nómina por período</button>
+    <button class="btn btn-secondary" @onclick="DescargarEmpleados">👤 Empleados por estado</button>
+    <button class="btn btn-success" @onclick="DescargarDescuentos">💸 Descuentos aplicados</button>
+    <button class="btn btn-info" @onclick="DescargarExpediente">📁 Expediente del empleado</button>
+</div>
+
+@code {
+    private async Task DescargarNomina()
+    {
+        var url = "api/Reporte/pdf?inicio=2025-05-01&fin=2025-05-31";
+        await DescargarArchivo(url, "reporte_nomina.pdf");
+    }
+
+    private async Task DescargarEmpleados()
+    {
+        var url = "api/Reporte/empleados?estado=Activo";
+        await DescargarArchivo(url, "reporte_empleados.pdf");
+    }
+
+    private async Task DescargarDescuentos()
+    {
+        var url = "api/Reporte/descuentos?nominaId=1";
+        await DescargarArchivo(url, "reporte_descuentos.pdf");
+    }
+
+    private async Task DescargarExpediente()
+    {
+        var url = "api/Reporte/expediente?empleadoId=2";
+        await DescargarArchivo(url, "expediente_empleado.pdf");
+    }
+
+    private async Task DescargarArchivo(string url, string nombreArchivo)
+    {
+        try
+        {
+            var bytes = await Http.GetByteArrayAsync(url);
+            var base64 = Convert.ToBase64String(bytes);
+            await JS.InvokeVoidAsync("descargarPDF", base64, nombreArchivo);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+}

@@ -1,0 +1,94 @@
+﻿@page "/empleados/editar/{id:int}"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using PFrontend.Models
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components
+
+<h3>✏️ Editar Empleado</h3>
+
+@if (empleado == null)
+{
+    <p><em>Cargando empleado...</em></p>
+}
+else
+{
+    <EditForm Model="empleado" OnValidSubmit="GuardarCambios">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <InputText @bind-Value="empleado.Nombre" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Apellido</label>
+            <InputText @bind-Value="empleado.Apellido" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">DPI</label>
+            <InputText @bind-Value="empleado.Dpi" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Correo</label>
+            <InputText @bind-Value="empleado.Correo" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Salario</label>
+            <InputNumber @bind-Value="empleado.Salario" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Departamento</label>
+            <InputNumber @bind-Value="empleado.DepartamentoId" class="form-control" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Puesto</label>
+            <InputNumber @bind-Value="empleado.PuestoId" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <button type="button" class="btn btn-secondary" @onclick='() => Navigation.NavigateTo("/empleados")'>Cancelar</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private EmpleadoEditDTO? empleado;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            empleado = await Http.GetFromJsonAsync<EmpleadoEditDTO>($"api/Empleados/{id}");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error al cargar empleado: {ex.Message}");
+        }
+    }
+
+    private async Task GuardarCambios()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync($"api/Empleados/{id}", empleado);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "Empleado actualizado correctamente");
+                Navigation.NavigateTo("/empleados");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", $"Error al actualizar: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error inesperado: {ex.Message}");
+        }
+    }
+}
