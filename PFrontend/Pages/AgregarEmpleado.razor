@@ -1,13 +1,15 @@
 ﻿@page "/empleados/agregar"
 @inject HttpClient Http
 @inject NavigationManager Navigation
-@inject IJSRuntime JS
 @using PFrontend.Models
-@using System.Net.Http.Json
-@using Microsoft.AspNetCore.Components.Forms
 @using PFrontend.Models.PFrontend.Models
 
-<h3>➕ Agregar Empleado</h3>
+<h3>Agregar Nuevo Empleado</h3>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-success">@mensaje</div>
+}
 
 <EditForm Model="empleado" OnValidSubmit="GuardarEmpleado">
     <DataAnnotationsValidator />
@@ -15,51 +17,81 @@
 
     <div class="mb-3">
         <label class="form-label">Nombre</label>
-        <InputText @bind-Value="empleado.Nombre" class="form-control" />
+        <InputText class="form-control" @bind-Value="empleado.Nombre" />
     </div>
     <div class="mb-3">
         <label class="form-label">Apellido</label>
-        <InputText @bind-Value="empleado.Apellido" class="form-control" />
+        <InputText class="form-control" @bind-Value="empleado.Apellido" />
     </div>
     <div class="mb-3">
         <label class="form-label">DPI</label>
-        <InputText @bind-Value="empleado.Dpi" class="form-control" />
+        <InputText class="form-control" @bind-Value="empleado.Dpi" />
     </div>
     <div class="mb-3">
         <label class="form-label">Correo</label>
-        <InputText @bind-Value="empleado.Correo" class="form-control" />
+        <InputText class="form-control" @bind-Value="empleado.Correo" />
     </div>
     <div class="mb-3">
         <label class="form-label">Salario</label>
-        <InputNumber @bind-Value="empleado.Salario" class="form-control" />
+        <InputNumber class="form-control" @bind-Value="empleado.Salario" />
     </div>
     <div class="mb-3">
-        <label class="form-label">Departamento</label>
-        <InputNumber @bind-Value="empleado.DepartamentoId" class="form-control" />
+        <label class="form-label">Departamento ID</label>
+        <InputNumber class="form-control" @bind-Value="empleado.DepartamentoId" />
     </div>
     <div class="mb-3">
-        <label class="form-label">Puesto</label>
-        <InputNumber @bind-Value="empleado.PuestoId" class="form-control" />
+        <label class="form-label">Puesto ID</label>
+        <InputNumber class="form-control" @bind-Value="empleado.PuestoId" />
     </div>
-
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <button class="btn btn-secondary ms-2" @onclick='() => Navigation.NavigateTo("/empleados")'>Cancelar</button>
+    <button type="submit" class="btn btn-success">Guardar</button>
+    <button type="button" class="btn btn-secondary ms-2" @onclick="Volver">Cancelar</button>
 </EditForm>
 
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger mt-3">@error</div>
+}
+
+@if (!string.IsNullOrEmpty(jsonDebug))
+{
+    <div class="alert alert-info mt-3">
+        <b>JSON enviado para depuración:</b>
+        <pre>@jsonDebug</pre>
+    </div>
+}
+
 @code {
-    private Empleado empleado = new();
+    private Empleado empleado = new Empleado();
+    private string mensaje = "";
+    private string error = "";
+    private string jsonDebug = "";
 
     private async Task GuardarEmpleado()
     {
-        var response = await Http.PostAsJsonAsync("api/Empleados", empleado);
+        try
+        {
+            jsonDebug = System.Text.Json.JsonSerializer.Serialize(empleado, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 
-        if (response.IsSuccessStatusCode)
-        {
-            Navigation.NavigateTo("/empleados");
+            var response = await Http.PostAsJsonAsync("https://localhost:7185/api/Empleados", empleado);
+            if (response.IsSuccessStatusCode)
+            {
+                mensaje = "Empleado agregado exitosamente.";
+                await Task.Delay(1000);
+                Navigation.NavigateTo("/empleados");
+            }
+            else
+            {
+                error = "Error al agregar el empleado. Por favor verifica los datos.";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error al guardar: {response.StatusCode}");
+            error = $"Error al agregar el empleado: {ex.Message}";
         }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/empleados");
     }
 }

@@ -1,9 +1,9 @@
 ﻿@page "/empleados"
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @using PFrontend.Models
 @using PFrontend.Models.PFrontend.Models
-
 
 <h3><i class="bi bi-people-fill"></i> Lista de Empleados</h3>
 
@@ -39,13 +39,13 @@ else
                     <td>@emp.Nombre</td>
                     <td>@emp.Apellido</td>
                     <td>@emp.Dpi</td>
-                    <td>@emp.Departamento</td> <!-- Ahora string -->
-                    <td>@emp.Puesto</td>       <!-- Ahora string -->
+                    <td>@emp.DepartamentoId</td>
+                    <td>@emp.PuestoId</td>
                     <td>
-                        <button class="btn btn-sm btn-warning me-2" @onclick="@(() => EditarEmpleado(emp.Id))">
+                        <button class="btn btn-sm btn-warning me-2" @onclick="() => EditarEmpleado(emp.Id)">
                             <i class="bi bi-pencil-square"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" @onclick="@(() => EliminarEmpleado(emp.Id))">
+                        <button class="btn btn-sm btn-danger" @onclick="() => EliminarEmpleado(emp.Id)">
                             <i class="bi bi-trash3-fill"></i>
                         </button>
                     </td>
@@ -80,7 +80,7 @@ else
         var confirm = await JS.InvokeAsync<bool>("confirm", "¿Estás seguro que deseas eliminar este empleado?");
         if (!confirm) return;
 
-        var response = await Http.DeleteAsync($"api/Empleados/{id}");
+        var response = await Http.DeleteAsync($"https://localhost:7185/api/Empleados/{id}");
         if (response.IsSuccessStatusCode)
         {
             empleados = empleados!.Where(e => e.Id != id).ToList();
@@ -90,7 +90,4 @@ else
             error = "No se pudo eliminar el empleado.";
         }
     }
-
-    [Inject]
-    public IJSRuntime JS { get; set; } = default!;
 }

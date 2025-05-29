@@ -12,9 +12,6 @@
             public decimal Salario { get; set; }
             public int DepartamentoId { get; set; }
             public int PuestoId { get; set; }
-
-            public string Departamento { get; set; } = string.Empty;
-            public string Puesto { get; set; } = string.Empty;
         }
     }
 
