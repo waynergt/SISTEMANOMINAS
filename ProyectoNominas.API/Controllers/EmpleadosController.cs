@@ -31,6 +31,7 @@ namespace ProyectoNominas.API.Controllers
                 {
                     Id = e.Id,
                     Nombre = e.Nombre,
+                    NombreCompleto = $"{e.Nombre} {e.Apellido}",    
                     Apellido = e.Apellido,
                     Dpi = e.Dpi,
                     Correo = e.Correo,
@@ -56,6 +57,7 @@ namespace ProyectoNominas.API.Controllers
                 .Select(e => new EmpleadoDto
                 {
                     Id = e.Id,
+                    NombreCompleto = $"{e.Nombre} {e.Apellido}",
                     Nombre = e.Nombre,
                     Apellido = e.Apellido,
                     Dpi = e.Dpi,

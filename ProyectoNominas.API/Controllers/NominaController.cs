@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProyectoNominas.API.Data;
 using ProyectoNominas.API.Domain.Entities;
-using ProyectoNominas.API.Services;
+using ProyectoNominas.API.Dtos;
 
 namespace ProyectoNominas.API.Controllers
 {
@@ -11,106 +11,90 @@ namespace ProyectoNominas.API.Controllers
     public class NominaController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly ReporteNominaService _reporteService;
 
-        public NominaController(ApplicationDbContext context, ReporteNominaService reporteService)
+        public NominaController(ApplicationDbContext context)
         {
             _context = context;
-            _reporteService = reporteService;
         }
-        // GET: api/Nomina
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Nomina>>> GetNominas()
-        {
-            return await _context.Nominas
-                .Include(n => n.Empleado)
-                .ToListAsync();
-        }
-
-        // GET: api/Nomina/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Nomina>> GetNomina(int id)
-        {
-            var nomina = await _context.Nominas
-                .Include(n => n.Empleado)
-                .FirstOrDefaultAsync(n => n.Id == id);
-
-            if (nomina == null)
-                return NotFound();
-
-            return nomina;
-        }
-
-        [HttpGet("pdf")]
-        public async Task<IActionResult> GenerarReporteNomina([FromQuery] DateTime inicio, [FromQuery] DateTime fin)
+        public async Task<ActionResult<IEnumerable<NominaDto>>> GetNominas()
         {
             var nominas = await _context.Nominas
                 .Include(n => n.Empleado)
-                .Where(n => n.FechaPago.Date >= inicio.Date && n.FechaPago.Date <= fin.Date)
-                .ToListAsync();
-
-            if (!nominas.Any())
-                return NotFound("No hay registros de nómina en el período indicado.");
-
-            var pdf = _reporteService.GenerarReporte(nominas);
-
-            return File(pdf, "application/pdf", $"reporte_nomina_{inicio:yyyyMMdd}_{fin:yyyyMMdd}.pdf");
-        }
-
-        // POST: api/Nomina
-        [HttpPost]
-        public async Task<ActionResult<Nomina>> PostNomina(Nomina nomina)
-        {
-            var empleado = await _context.Empleados.FindAsync(nomina.EmpleadoId);
-            if (empleado == null)
-                return BadRequest("Empleado no encontrado.");
-
-            // Obtener documentos obligatorios
-            var documentosObligatorios = await _context.ConfiguracionesExpediente
-                .Where(c => c.Obligatorio)
-                .Select(c => c.TipoDocumento.ToLower())
-                .ToListAsync();
-
-            var documentosEmpleado = await _context.DocumentosEmpleado
-                .Where(d => d.EmpleadoId == nomina.EmpleadoId)
-                .Select(d => d.TipoDocumento.ToLower())
-                .ToListAsync();
-
-            var faltantes = documentosObligatorios
-                .Where(doc => !documentosEmpleado.Contains(doc))
-                .ToList();
-
-            if (faltantes.Any())
-            {
-                return BadRequest(new
+                .Select(n => new NominaDto
                 {
-                    mensaje = "El expediente del empleado está incompleto.",
-                    documentosFaltantes = faltantes
-                });
-            }
+                    Id = n.Id,
+                    FechaPago = n.FechaPago,
+                    MontoTotal = n.MontoTotal,
+                    EmpleadoId = n.EmpleadoId,
+                    NombreEmpleado = n.Empleado != null ? $"{n.Empleado.Nombre} {n.Empleado.Apellido}" : ""
+                })
+                .ToListAsync();
 
-            // Si el expediente está completo, se registra la nómina
-            nomina.MontoTotal = empleado.Salario;
-            nomina.FechaPago = DateTime.Now;
-
-            _context.Nominas.Add(nomina);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetNomina), new { id = nomina.Id }, nomina);
+            return Ok(nominas);
         }
 
-
-        // DELETE: api/Nomina/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteNomina(int id)
+        [HttpGet("{id}")]
+        public async Task<ActionResult<NominaDto>> GetNomina(int id)
         {
-            var nomina = await _context.Nominas.FindAsync(id);
+            var nomina = await _context.Nominas
+                .Include(n => n.Empleado)
+                .Where(n => n.Id == id)
+                .Select(n => new NominaDto
+                {
+                    Id = n.Id,
+                    FechaPago = n.FechaPago,
+                    MontoTotal = n.MontoTotal,
+                    EmpleadoId = n.EmpleadoId,
+                    NombreEmpleado = n.Empleado != null ? $"{n.Empleado.Nombre} {n.Empleado.Apellido}" : ""
+                })
+                .FirstOrDefaultAsync();
+
             if (nomina == null)
                 return NotFound();
 
+            return Ok(nomina);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> PostNomina(NominaDto dto)
+        {
+            var nomina = new Nomina
+            {
+                FechaPago = dto.FechaPago,
+                MontoTotal = dto.MontoTotal,
+                EmpleadoId = dto.EmpleadoId
+            };
+
+            _context.Nominas.Add(nomina);
+            await _context.SaveChangesAsync();
+            dto.Id = nomina.Id;
+            return CreatedAtAction(nameof(GetNomina), new { id = nomina.Id }, dto);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> PutNomina(int id, NominaDto dto)
+        {
+            var nomina = await _context.Nominas.FindAsync(id);
+            if (nomina == null) return NotFound();
+
+            nomina.FechaPago = dto.FechaPago;
+            nomina.MontoTotal = dto.MontoTotal;
+            nomina.EmpleadoId = dto.EmpleadoId;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteNomina(int id)
+        {
+            var nomina = await _context.Nominas.FindAsync(id);
+            if (nomina == null) return NotFound();
+
             _context.Nominas.Remove(nomina);
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
     }

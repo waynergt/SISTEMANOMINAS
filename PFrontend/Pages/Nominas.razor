@@ -1,0 +1,172 @@
+﻿@page "/nominas"
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<h3>Nóminas</h3>
+
+@if (nominas == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <button class="btn btn-success mb-2" @onclick="MostrarAgregar">Agregar Nómina</button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Empleado</th>
+                <th>Fecha Pago</th>
+                <th>Monto Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var nomina in nominas)
+            {
+                <tr>
+                    <td>@nomina.Id</td>
+                    <td>@nomina.NombreEmpleado</td>
+                    <td>@nomina.FechaPago.ToShortDateString()</td>
+                    <td>@nomina.MontoTotal.ToString("C")</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => MostrarEditar(nomina)">Editar</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => EliminarNomina(nomina.Id)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (mostrarFormulario)
+{
+    <EditForm Model="nominaActual" OnValidSubmit="GuardarNomina">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="mb-2">
+            <label>Empleado:</label>
+            <select class="form-control" @bind="nominaActual.EmpleadoId" required>
+                <option value="">Seleccione...</option>
+                @if (empleados != null && empleados.Count > 0)
+                {
+                    @foreach (var emp in empleados)
+                    {
+                        <option value="@emp.Id">@emp.NombreCompleto</option>
+                    }
+                }
+                else
+                {
+                    <option disabled>Cargando empleados...</option>
+                }
+            </select>
+        </div>
+        <div class="mb-2">
+            <label>Fecha de Pago:</label>
+            <InputDate class="form-control" @bind-Value="nominaActual.FechaPago" />
+        </div>
+        <div class="mb-2">
+            <label>Monto Total:</label>
+            <InputNumber class="form-control" @bind-Value="nominaActual.MontoTotal" />
+        </div>
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button class="btn btn-secondary ms-2" type="button" @onclick="CerrarFormulario">Cancelar</button>
+    </EditForm>
+}
+
+@code {
+    List<NominaDto>? nominas;
+    List<EmpleadoDto>? empleados = new();
+    NominaDto nominaActual = new();
+    bool mostrarFormulario = false;
+    bool esEdicion = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEmpleados(); // Cargar empleados primero
+        await CargarNominas();
+    }
+
+    async Task CargarNominas()
+    {
+        nominas = await Http.GetFromJsonAsync<List<NominaDto>>("api/Nomina");
+    }
+
+    async Task CargarEmpleados()
+    {
+        try
+        {
+            empleados = await Http.GetFromJsonAsync<List<EmpleadoDto>>("api/Empleados");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error cargando empleados: {ex.Message}");
+            empleados = new List<EmpleadoDto>();
+        }
+    }
+
+    void MostrarAgregar()
+    {
+        nominaActual = new NominaDto { FechaPago = DateTime.Today };
+        esEdicion = false;
+        mostrarFormulario = true;
+    }
+
+    void MostrarEditar(NominaDto nomina)
+    {
+        nominaActual = new NominaDto
+            {
+                Id = nomina.Id,
+                FechaPago = nomina.FechaPago,
+                MontoTotal = nomina.MontoTotal,
+                EmpleadoId = nomina.EmpleadoId
+            };
+        esEdicion = true;
+        mostrarFormulario = true;
+    }
+
+    async Task GuardarNomina()
+    {
+        if (esEdicion)
+        {
+            await Http.PutAsJsonAsync($"api/Nomina/{nominaActual.Id}", nominaActual);
+        }
+        else
+        {
+            await Http.PostAsJsonAsync("api/Nomina", nominaActual);
+        }
+        mostrarFormulario = false;
+        await CargarNominas();
+        StateHasChanged();
+    }
+
+    async Task EliminarNomina(int id)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", "¿Seguro que deseas eliminar esta nómina?"))
+        {
+            await Http.DeleteAsync($"api/Nomina/{id}");
+            await CargarNominas();
+            StateHasChanged();
+        }
+    }
+
+    void CerrarFormulario()
+    {
+        mostrarFormulario = false;
+    }
+
+    public class NominaDto
+    {
+        public int Id { get; set; }
+        public DateTime FechaPago { get; set; }
+        public decimal MontoTotal { get; set; }
+        public int EmpleadoId { get; set; }
+        public string? NombreEmpleado { get; set; }
+    }
+
+    public class EmpleadoDto
+    {
+        public int Id { get; set; }
+        public string NombreCompleto { get; set; } = "";
+    }
+}
