@@ -12,6 +12,7 @@ namespace PFrontend
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7185/") });
+            builder.Services.AddScoped<ExpedienteService>();
 
             await builder.Build().RunAsync();
         }

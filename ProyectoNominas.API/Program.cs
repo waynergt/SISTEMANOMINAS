@@ -71,6 +71,7 @@ namespace ProyectoNominas.API
 
             app.UseAuthentication(); // ? Autenticación
             app.UseAuthorization();
+            app.UseStaticFiles();
 
             app.MapControllers();
 

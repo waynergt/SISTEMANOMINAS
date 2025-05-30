@@ -1,12 +1,15 @@
-﻿namespace ProyectoNominas.API.Domain.Entities
-{
-    public class DocumentoEmpleado
-    {
-        public int Id { get; set; }
-        public string TipoDocumento { get; set; } = string.Empty;
-        public string RutaArchivo { get; set; } = string.Empty;
+﻿using ProyectoNominas.API.Domain.Entities;
+using QuestPDF.Fluent;
 
-        public int EmpleadoId { get; set; }
-        public Empleado? Empleado { get; set; }
-    }
+public class DocumentoEmpleado
+{
+    public int Id { get; set; }
+    public int EmpleadoId { get; set; }
+    public string? TipoDocumento { get; set; }
+    public DateTime FechaSubida { get; set; }
+    public string? UrlArchivo { get; set; }
+
+    // Relación de navegación opcional
+    public Empleado? Empleado { get; set; }
+    public Action<TextDescriptor> RutaArchivo { get; internal set; }
 }
