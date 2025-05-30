@@ -31,7 +31,6 @@ namespace ProyectoNominas.API.Controllers
                 {
                     Id = e.Id,
                     Nombre = e.Nombre,
-                    NombreCompleto = $"{e.Nombre} {e.Apellido}",
                     Apellido = e.Apellido,
                     Dpi = e.Dpi,
                     Correo = e.Correo,
@@ -57,37 +56,6 @@ namespace ProyectoNominas.API.Controllers
                 .Select(e => new EmpleadoDto
                 {
                     Id = e.Id,
-                    NombreCompleto = $"{e.Nombre} {e.Apellido}",
-                    Nombre = e.Nombre,
-                    Apellido = e.Apellido,
-                    Dpi = e.Dpi,
-                    Correo = e.Correo,
-                    Salario = e.Salario,
-                    DepartamentoId = e.DepartamentoId,
-                    PuestoId = e.PuestoId,
-                    Departamento = e.Departamento != null ? e.Departamento.Nombre : string.Empty,
-                    Puesto = e.Puesto != null ? e.Puesto.Nombre : string.Empty
-                })
-                .FirstOrDefaultAsync();
-
-            if (empleado == null)
-                return NotFound();
-
-            return Ok(empleado);
-        }
-
-        // GET: api/Empleados/dpi/9988776655443
-        [HttpGet("dpi/{dpi}")]
-        public async Task<ActionResult<EmpleadoDto>> GetEmpleadoPorDpi(string dpi)
-        {
-            var empleado = await _context.Empleados
-                .Include(e => e.Departamento)
-                .Include(e => e.Puesto)
-                .Where(e => e.Dpi == dpi)
-                .Select(e => new EmpleadoDto
-                {
-                    Id = e.Id,
-                    NombreCompleto = $"{e.Nombre} {e.Apellido}",
                     Nombre = e.Nombre,
                     Apellido = e.Apellido,
                     Dpi = e.Dpi,
