@@ -87,6 +87,7 @@
 }
 
 @code {
+
     private string reporteSeleccionado;
 
     // Nómina
@@ -198,6 +199,7 @@
         finally { isLoading = false; StateHasChanged(); }
     }
 
+    // SOLO UNA VEZ este método:
     private async Task DescargarArchivo(string url, string nombreArchivo)
     {
         try

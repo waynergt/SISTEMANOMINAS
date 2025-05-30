@@ -141,8 +141,18 @@ namespace ProyectoNominas.API.Services
 
             return documento.GeneratePdf();
         }
+
+        // Reporte de expediente de un empleado
         public byte[] GenerarReporteExpedienteEmpleado(Empleado empleado)
         {
+            // Garantiza que las listas no sean nulas
+            var documentos = empleado.Documentos ?? new List<DocumentoEmpleado>();
+            // Fix for CS0246: Replace 'Estudio' with the correct type 'InformacionAcademica' based on the provided type signatures.
+            // Fix for CS0019: Adjust the null-coalescing operator to work with the correct type.
+
+            var estudios = empleado.Estudios?.ToList() ?? new List<InformacionAcademica>();
+            var nominas = empleado.Nominas ?? new List<Nomina>();
+
             var documento = Document.Create(container =>
             {
                 container.Page(page =>
@@ -164,7 +174,7 @@ namespace ProyectoNominas.API.Services
 
                         // DOCUMENTOS
                         column.Item().PaddingTop(20).Text("📄 Documentos de expediente").Bold().FontSize(14);
-                        if (empleado.Documentos != null && empleado.Documentos.Any())
+                        if (documentos.Any())
                         {
                             column.Item().Table(tabla =>
                             {
@@ -180,7 +190,7 @@ namespace ProyectoNominas.API.Services
                                     header.Cell().Element(CellEstilo).Text("Ruta");
                                 });
 
-                                foreach (var doc in empleado.Documentos)
+                                foreach (var doc in documentos)
                                 {
                                     tabla.Cell().Element(CellEstilo).Text(doc.TipoDocumento);
                                     tabla.Cell().Element(CellEstilo).Text(doc.RutaArchivo);
@@ -194,7 +204,7 @@ namespace ProyectoNominas.API.Services
 
                         // INFORMACIÓN ACADÉMICA
                         column.Item().PaddingTop(20).Text("🎓 Información académica").Bold().FontSize(14);
-                        if (empleado.Estudios != null && empleado.Estudios.Any())
+                        if (estudios.Any())
                         {
                             column.Item().Table(tabla =>
                             {
@@ -212,7 +222,7 @@ namespace ProyectoNominas.API.Services
                                     header.Cell().Element(CellEstilo).Text("Fecha de graduación");
                                 });
 
-                                foreach (var est in empleado.Estudios)
+                                foreach (var est in estudios)
                                 {
                                     tabla.Cell().Element(CellEstilo).Text(est.Titulo);
                                     tabla.Cell().Element(CellEstilo).Text(est.Institucion);
@@ -227,7 +237,7 @@ namespace ProyectoNominas.API.Services
 
                         // HISTORIAL DE NÓMINAS
                         column.Item().PaddingTop(20).Text("💵 Historial de nóminas").Bold().FontSize(14);
-                        if (empleado.Nominas != null && empleado.Nominas.Any())
+                        if (nominas.Any())
                         {
                             column.Item().Table(tabla =>
                             {
@@ -243,7 +253,7 @@ namespace ProyectoNominas.API.Services
                                     header.Cell().Element(CellEstilo).Text("Monto total");
                                 });
 
-                                foreach (var n in empleado.Nominas)
+                                foreach (var n in nominas)
                                 {
                                     tabla.Cell().Element(CellEstilo).Text(n.FechaPago.ToShortDateString());
                                     tabla.Cell().Element(CellEstilo).Text($"Q{n.MontoTotal:N2}");
@@ -261,7 +271,7 @@ namespace ProyectoNominas.API.Services
             return documento.GeneratePdf();
         }
 
-        // 🔧 Método reutilizable para estilo de celdas (fuera de todos los métodos)
+        // 🔧 Método reutilizable para estilo de celdas (debe estar dentro de la clase, fuera de los métodos)
         private IContainer CellEstilo(IContainer container)
         {
             return container

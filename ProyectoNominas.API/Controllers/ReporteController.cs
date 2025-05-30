@@ -51,6 +51,28 @@ namespace ProyectoNominas.API.Controllers
 
             return File(pdf, "application/pdf", $"expediente_empleado_{empleadoId}.pdf");
         }
+        [HttpGet("expediente-dpi")]
+        public async Task<IActionResult> GenerarReporteExpedientePorDpi([FromQuery] string dpi)
+        {
+            try
+            {
+                var empleado = await _context.Empleados
+                    .Include(e => e.Documentos)
+                    .Include(e => e.Estudios)
+                    .Include(e => e.Nominas)
+                    .FirstOrDefaultAsync(e => e.Dpi == dpi);
 
+                if (empleado == null)
+                    return NotFound("Empleado no encontrado.");
+
+                var pdf = _reporteService.GenerarReporteExpedienteEmpleado(empleado);
+                return File(pdf, "application/pdf", $"expediente_empleado_{dpi}.pdf");
+            }
+            catch (Exception ex)
+            {
+                // Esto enviará el error real al frontend para depuración
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
+        }
     }
 }
