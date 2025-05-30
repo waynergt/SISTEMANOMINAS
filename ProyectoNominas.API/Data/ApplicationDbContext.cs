@@ -11,7 +11,7 @@ namespace ProyectoNominas.API.Data
             : base(options)
         {
         }
-
+        public DbSet<TipoDocumentoObligatorio> TipoDocumentoObligatorio { get; set; }
         public DbSet<Empleado> Empleados { get; set; }
         public DbSet<Departamento> Departamentos { get; set; }
         public DbSet<Puesto> Puestos { get; set; }

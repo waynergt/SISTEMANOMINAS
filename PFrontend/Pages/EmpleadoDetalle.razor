@@ -165,4 +165,20 @@ else
         public int DepartamentoId { get; set; }
         public int PuestoId { get; set; }
     }
+    public class DocumentoExpedienteDto
+    {
+        public int Id { get; set; }
+        public string TipoDocumento { get; set; }
+        public string RutaArchivo { get; set; }
+        public DateTime FechaSubida { get; set; }
+    }
+    public class ExpedienteValidacionDto
+    {
+        public bool ExpedienteCompleto { get; set; }
+        public List<string> DocumentosFaltantes { get; set; }
+    }
+    public class NuevoDocumentoModel
+    {
+        public string TipoDocumento { get; set; } = "";
+    }
 }
