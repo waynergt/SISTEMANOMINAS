@@ -29,7 +29,7 @@ namespace ProyectoNominas.API.Controllers
                     Id = d.Id,
                     EmpleadoId = d.EmpleadoId,
                     TipoDocumento = d.TipoDocumento,
-                    UrlArchivo = d.UrlArchivo,
+                    UrlArchivo = d.RutaArchivo,
                     FechaSubida = d.FechaSubida
                 })
                 .ToListAsync();
@@ -47,7 +47,7 @@ namespace ProyectoNominas.API.Controllers
                     Id = d.Id,
                     EmpleadoId = d.EmpleadoId,
                     TipoDocumento = d.TipoDocumento,
-                    UrlArchivo = d.UrlArchivo,
+                    UrlArchivo = d.RutaArchivo,
                     FechaSubida = d.FechaSubida
                 }).FirstOrDefaultAsync();
 
@@ -68,7 +68,7 @@ namespace ProyectoNominas.API.Controllers
                     Id = d.Id,
                     EmpleadoId = d.EmpleadoId,
                     TipoDocumento = d.TipoDocumento,
-                    UrlArchivo = d.UrlArchivo,
+                    UrlArchivo = d.RutaArchivo,
                     FechaSubida = d.FechaSubida
                 })
                 .ToListAsync();
@@ -97,7 +97,7 @@ namespace ProyectoNominas.API.Controllers
             {
                 EmpleadoId = dto.EmpleadoId,
                 TipoDocumento = dto.TipoDocumento,
-                UrlArchivo = $"/expedientes/{nombreArchivo}",
+                RutaArchivo = $"/expedientes/{nombreArchivo}",
                 FechaSubida = DateTime.UtcNow
             };
             _context.DocumentosEmpleado.Add(documento);
@@ -108,7 +108,7 @@ namespace ProyectoNominas.API.Controllers
                 Id = documento.Id,
                 EmpleadoId = documento.EmpleadoId,
                 TipoDocumento = documento.TipoDocumento,
-                UrlArchivo = documento.UrlArchivo,
+                UrlArchivo = documento.RutaArchivo,
                 FechaSubida = documento.FechaSubida
             };
 

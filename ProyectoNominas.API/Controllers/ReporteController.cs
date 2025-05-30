@@ -99,19 +99,25 @@ namespace ProyectoNominas.API.Controllers
         [HttpGet("expediente-dpi")]
         public async Task<IActionResult> GenerarReporteExpedientePorDpi([FromQuery] string dpi)
         {
-            var empleado = await _context.Empleados
-                .Include(e => e.Documentos)
-                .Include(e => e.Estudios)
-                .Include(e => e.Nominas)
-                .FirstOrDefaultAsync(e => e.Dpi == dpi);
+            try
+            {
+                var empleado = await _context.Empleados
+                    .Include(e => e.Documentos)
+                    .Include(e => e.Estudios)
+                    .Include(e => e.Nominas)
+                    .FirstOrDefaultAsync(e => e.Dpi == dpi);
 
-            if (empleado == null)
-                return NotFound("Empleado no encontrado.");
+                if (empleado == null)
+                    return NotFound("Empleado no encontrado.");
 
-            var pdf = _reporteService.GenerarReporteExpedienteEmpleado(empleado);
-            return File(pdf, "application/pdf", $"expediente_empleado_{dpi}.pdf");
+                var pdf = _reporteService.GenerarReporteExpedienteEmpleado(empleado);
+                return File(pdf, "application/pdf", $"expediente_empleado_{dpi}.pdf");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
         }
-
         [HttpGet("estados")]
         public async Task<IActionResult> ObtenerEstados()
         {
