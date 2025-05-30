@@ -41,7 +41,7 @@ namespace ProyectoNominas.API.Controllers
             var empleado = await _context.Empleados
                 .Include(e => e.Documentos)
                 .Include(e => e.Estudios)
-                .Include(e => e.Nominas)
+                .Include(e => e.Nominas).ThenInclude(n => n.Detalles)
                 .FirstOrDefaultAsync(e => e.Id == empleadoId);
 
             if (empleado == null)
@@ -57,9 +57,9 @@ namespace ProyectoNominas.API.Controllers
         public async Task<IActionResult> ReporteDescuentosPorDpi([FromQuery] string dpi)
         {
             var detalles = await _context.DetallesDescuentoNomina
-                .Include(d => d.Nomina).ThenInclude(n => n.Empleado)
+                .Include(d => d.Nomina).ThenInclude(n => n.Detalles)
                 .Include(d => d.DescuentoLegal)
-                .Where(d => d.Nomina.Empleado.Dpi == dpi)
+                .Where(d => d.Nomina.Detalles.Any(x => x.Empleado.Dpi == dpi))
                 .ToListAsync();
 
             if (!detalles.Any())
@@ -68,13 +68,14 @@ namespace ProyectoNominas.API.Controllers
             var pdf = _reporteService.GenerarReporteDescuentosPorDpi(detalles, dpi);
             return File(pdf, "application/pdf", $"reporte_descuentos_{dpi}.pdf");
         }
+
         // GET: api/Reporte/nomina-por-periodo?inicio=2024-01-01&fin=2024-02-01
         [HttpGet("nomina-por-periodo")]
         public async Task<IActionResult> GenerarReporteNominaPorPeriodo([FromQuery] DateTime inicio, [FromQuery] DateTime fin)
         {
             var nominas = await _context.Nominas
-                .Include(n => n.Empleado)
-                .Where(n => n.FechaPago >= inicio && n.FechaPago <= fin)
+                .Include(n => n.Detalles).ThenInclude(d => d.Empleado)
+                .Where(n => n.FechaInicio >= inicio && n.FechaFin <= fin)
                 .ToListAsync();
 
             if (!nominas.Any())
@@ -83,6 +84,7 @@ namespace ProyectoNominas.API.Controllers
             var pdf = _reporteService.GenerarReporteNominasPorPeriodo(nominas, inicio, fin);
             return File(pdf, "application/pdf", $"reporte_nominas_{inicio:yyyyMMdd}_{fin:yyyyMMdd}.pdf");
         }
+
         // GET: api/Reporte/expediente-dpi?dpi=XXXXXXXXXXXX
         [HttpGet("expediente-dpi")]
         public async Task<IActionResult> GenerarReporteExpedientePorDpi([FromQuery] string dpi)
@@ -92,7 +94,7 @@ namespace ProyectoNominas.API.Controllers
                 var empleado = await _context.Empleados
                     .Include(e => e.Documentos)
                     .Include(e => e.Estudios)
-                    .Include(e => e.Nominas)
+                    .Include(e => e.Nominas).ThenInclude(n => n.Detalles)
                     .FirstOrDefaultAsync(e => e.Dpi == dpi);
 
                 if (empleado == null)
@@ -103,7 +105,6 @@ namespace ProyectoNominas.API.Controllers
             }
             catch (Exception ex)
             {
-                // Esto te mostrará el error real al cliente (útil para depurar)
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }

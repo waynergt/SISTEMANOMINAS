@@ -43,6 +43,7 @@ namespace ProyectoNominas.API
             builder.Services.AddScoped<ReporteNominaService>();
             builder.Services.AddScoped<InformacionAcademicaService>();
             builder.Services.AddScoped<ExpedienteService>();
+            builder.Services.AddScoped<NominaService>();    
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

@@ -65,7 +65,7 @@ namespace ProyectoNominas.API.Services
 
         public async Task<ExpedienteValidacionDto> ValidarExpediente(int empleadoId)
         {
-            var documentosObligatorios = await _context.TipoDocumentoObligatorio
+            var documentosObligatorios = await _context.ConfiguracionesExpediente
                 .Where(c => c.Obligatorio)
                 .Select(c => c.TipoDocumento.ToLower())
                 .ToListAsync();

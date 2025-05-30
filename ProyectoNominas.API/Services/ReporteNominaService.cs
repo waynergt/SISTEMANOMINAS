@@ -24,10 +24,10 @@ namespace ProyectoNominas.API.Services
                     {
                         tabla.ColumnsDefinition(columns =>
                         {
-                            columns.RelativeColumn(); // Nombre
-                            columns.RelativeColumn(); // Apellido
-                            columns.RelativeColumn(); // DPI
-                            columns.RelativeColumn(); // Correo
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
                         });
 
                         tabla.Header(header =>
@@ -57,7 +57,9 @@ namespace ProyectoNominas.API.Services
         {
             var documentos = empleado.Documentos ?? new List<DocumentoEmpleado>();
             var estudios = empleado.Estudios ?? new List<InformacionAcademica>();
-            var nominas = empleado.Nominas ?? new List<Nomina>();
+            var detallesNomina = empleado.Nominas?.SelectMany(n => n.Detalles ?? new List<DetalleNomina>())
+                .Where(d => d.EmpleadoId == empleado.Id)
+                .ToList() ?? new List<DetalleNomina>();
 
             var documento = Document.Create(container =>
             {
@@ -116,9 +118,9 @@ namespace ProyectoNominas.API.Services
                             {
                                 tabla.ColumnsDefinition(columns =>
                                 {
-                                    columns.RelativeColumn(); // Título
-                                    columns.RelativeColumn(); // Institución
-                                    columns.RelativeColumn(); // Fecha
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
 
                                 tabla.Header(header =>
@@ -141,28 +143,34 @@ namespace ProyectoNominas.API.Services
                             column.Item().Text("No hay historial académico registrado.");
                         }
 
-                        // HISTORIAL DE NÓMINAS
+                        // HISTORIAL DE NÓMINAS (nuevo: por detalle)
                         column.Item().PaddingTop(20).Text("💵 Historial de nóminas").Bold().FontSize(14);
-                        if (nominas.Any())
+                        if (detallesNomina.Any())
                         {
                             column.Item().Table(tabla =>
                             {
                                 tabla.ColumnsDefinition(columns =>
                                 {
-                                    columns.RelativeColumn(); // Fecha
-                                    columns.RelativeColumn(); // Monto
+                                    columns.RelativeColumn(); // Periodo
+                                    columns.RelativeColumn(); // Fecha inicio
+                                    columns.RelativeColumn(); // Fecha fin
+                                    columns.RelativeColumn(); // Total a pagar
                                 });
 
                                 tabla.Header(header =>
                                 {
-                                    header.Cell().Element(CellEstilo).Text("Fecha de pago");
-                                    header.Cell().Element(CellEstilo).Text("Monto total");
+                                    header.Cell().Element(CellEstilo).Text("Periodo");
+                                    header.Cell().Element(CellEstilo).Text("Fecha Inicio");
+                                    header.Cell().Element(CellEstilo).Text("Fecha Fin");
+                                    header.Cell().Element(CellEstilo).Text("Total pagado");
                                 });
 
-                                foreach (var n in nominas)
+                                foreach (var d in detallesNomina)
                                 {
-                                    tabla.Cell().Element(CellEstilo).Text(n.FechaPago.ToShortDateString());
-                                    tabla.Cell().Element(CellEstilo).Text($"Q{n.MontoTotal:N2}");
+                                    tabla.Cell().Element(CellEstilo).Text(d.Nomina?.Periodo ?? "");
+                                    tabla.Cell().Element(CellEstilo).Text(d.Nomina?.FechaInicio.ToShortDateString() ?? "");
+                                    tabla.Cell().Element(CellEstilo).Text(d.Nomina?.FechaFin.ToShortDateString() ?? "");
+                                    tabla.Cell().Element(CellEstilo).Text($"Q{d.TotalPagar:N2}");
                                 }
                             });
                         }
@@ -193,9 +201,9 @@ namespace ProyectoNominas.API.Services
                     {
                         tabla.ColumnsDefinition(columns =>
                         {
-                            columns.RelativeColumn(); // Nombre del empleado
-                            columns.RelativeColumn(); // Descuento
-                            columns.RelativeColumn(); // Monto
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
                         });
 
                         tabla.Header(header =>
@@ -207,7 +215,8 @@ namespace ProyectoNominas.API.Services
 
                         foreach (var d in detalles)
                         {
-                            tabla.Cell().Element(CellEstilo).Text($"{d.Nomina?.Empleado?.Nombre} {d.Nomina?.Empleado?.Apellido}");
+                            var detalleEmpleado = d.Nomina?.Detalles?.FirstOrDefault(x => x.EmpleadoId == d.NominaId)?.Empleado;
+                            tabla.Cell().Element(CellEstilo).Text($"{detalleEmpleado?.Nombre ?? "N/A"} {detalleEmpleado?.Apellido ?? ""}");
                             tabla.Cell().Element(CellEstilo).Text(d.DescuentoLegal?.Nombre ?? "N/A");
                             tabla.Cell().Element(CellEstilo).Text($"Q{d.Monto:N2}");
                         }
@@ -217,6 +226,8 @@ namespace ProyectoNominas.API.Services
 
             return documento.GeneratePdf();
         }
+
+        // Reporte de nóminas por periodo (detallando empleados)
         public byte[] GenerarReporteNominasPorPeriodo(List<Nomina> nominas, DateTime inicio, DateTime fin)
         {
             var documento = Document.Create(container =>
@@ -239,17 +250,20 @@ namespace ProyectoNominas.API.Services
                         tabla.Header(header =>
                         {
                             header.Cell().Element(CellEstilo).Text("Empleado");
-                            header.Cell().Element(CellEstilo).Text("Fecha Pago");
-                            header.Cell().Element(CellEstilo).Text("Monto Total");
-                            header.Cell().Element(CellEstilo).Text("Estado");
+                            header.Cell().Element(CellEstilo).Text("Periodo");
+                            header.Cell().Element(CellEstilo).Text("Rango Fechas");
+                            header.Cell().Element(CellEstilo).Text("Total Pagado");
                         });
 
-                        foreach (var n in nominas)
+                        foreach (var nomina in nominas)
                         {
-                            tabla.Cell().Element(CellEstilo).Text($"{n.Empleado?.Nombre} {n.Empleado?.Apellido}");
-                            tabla.Cell().Element(CellEstilo).Text(n.FechaPago.ToShortDateString());
-                            tabla.Cell().Element(CellEstilo).Text($"Q{n.MontoTotal:N2}");
-                            tabla.Cell().Element(CellEstilo).Text(n.Empleado?.EstadoLaboral ?? "");
+                            foreach (var detalle in nomina.Detalles)
+                            {
+                                tabla.Cell().Element(CellEstilo).Text($"{detalle.Empleado?.Nombre} {detalle.Empleado?.Apellido}");
+                                tabla.Cell().Element(CellEstilo).Text(nomina.Periodo);
+                                tabla.Cell().Element(CellEstilo).Text($"{nomina.FechaInicio:dd/MM/yyyy} - {nomina.FechaFin:dd/MM/yyyy}");
+                                tabla.Cell().Element(CellEstilo).Text($"Q{detalle.TotalPagar:N2}");
+                            }
                         }
                     });
                 });

@@ -1,9 +1,9 @@
 ﻿@page "/empleados"
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @using PFrontend.Models
 @using PFrontend.Models.PFrontend.Models
-
 
 <h3><i class="bi bi-people-fill"></i> Lista de Empleados</h3>
 
@@ -45,11 +45,14 @@ else
                         <button class="btn btn-outline-primary btn-sm me-2" @onclick="@(() => EditarEmpleado(emp.Id))">
                             <i class="bi bi-pencil-square"></i>
                         </button>
-                        <button class="btn btn-outline-info btn-sm me-2" @onclick="@(() => VerDetalleEmpleado(emp.Id))">
-                            <i class="bi bi-eye"></i>
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" @onclick="@(() => EliminarEmpleado(emp.Id))">
+                        <button class="btn btn-outline-danger btn-sm me-2" @onclick="@(() => EliminarEmpleado(emp.Id))">
                             <i class="bi bi-trash"></i>
+                        </button>
+                        <button class="btn btn-primary btn-sm me-2" @onclick="() => VerDetalleEmpleado(emp.Id)">
+                            Ver Detalles
+                        </button>
+                        <button class="btn btn-success btn-sm" @onclick="() => AbrirDialogoSubir(emp.Id)">
+                            Subir Documento
                         </button>
                     </td>
                 </tr>
@@ -58,16 +61,59 @@ else
     </table>
 }
 
+@if (mostrarModalSubir)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Subir Documento</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalSubir"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@nuevoDocumento" OnValidSubmit="SubirDocumentoModal">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <div class="mb-2">
+                            <label>Tipo de Documento</label>
+                            <InputSelect class="form-select" @bind-Value="nuevoDocumento.TipoDocumento">
+                                <option value="">Seleccione</option>
+                                @foreach (var tipo in tiposDocumento)
+                                {
+                                    <option value="@tipo">@tipo</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="mb-2">
+                            <label>Archivo</label>
+                            <InputFile OnChange="OnInputFileChange" />
+                        </div>
+                        <button class="btn btn-success" type="submit">Subir</button>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    
     private List<Empleado>? empleados;
     private string? error;
+
+    // Modal subir documento
+    private bool mostrarModalSubir = false;
+    private int empleadoIdSeleccionado;
+    private NuevoDocumentoModel nuevoDocumento = new();
+    private IBrowserFile? archivoSeleccionado;
+    private List<string> tiposDocumento = new();
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             empleados = await Http.GetFromJsonAsync<List<Empleado>>("https://localhost:7185/api/Empleados");
+            tiposDocumento = await Http.GetFromJsonAsync<List<string>>("https://localhost:7185/api/Expediente/tipos-obligatorios");
         }
         catch (Exception ex)
         {
@@ -75,6 +121,7 @@ else
             empleados = new List<Empleado>();
         }
     }
+
     void VerDetalleEmpleado(int id) => Navigation.NavigateTo($"/empleados/detalle/{id}");
     void AgregarEmpleado() => Navigation.NavigateTo("/empleados/agregar");
     void EditarEmpleado(int id) => Navigation.NavigateTo($"/empleados/editar/{id}");
@@ -95,6 +142,85 @@ else
         }
     }
 
-    [Inject]
-    public IJSRuntime JS { get; set; } = default!;
+    void AbrirDialogoSubir(int empleadoId)
+    {
+        empleadoIdSeleccionado = empleadoId;
+        mostrarModalSubir = true;
+        nuevoDocumento = new(); // Limpiar el modelo
+        archivoSeleccionado = null;
+    }
+
+    void CerrarModalSubir()
+    {
+        mostrarModalSubir = false;
+    }
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        archivoSeleccionado = e.File;
+    }
+
+    private async Task SubirDocumentoModal()
+    {
+        if (archivoSeleccionado == null || string.IsNullOrEmpty(nuevoDocumento.TipoDocumento))
+        {
+            await JS.InvokeVoidAsync("alert", "Seleccione tipo de documento y archivo.");
+            return;
+        }
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(empleadoIdSeleccionado.ToString()), "EmpleadoId");
+        content.Add(new StringContent(nuevoDocumento.TipoDocumento), "TipoDocumento");
+        content.Add(new StreamContent(archivoSeleccionado.OpenReadStream(10_000_000)), "Archivo", archivoSeleccionado.Name);
+
+        var response = await Http.PostAsync("https://localhost:7185/api/Expediente/upload", content);
+        if (response.IsSuccessStatusCode)
+        {
+            nuevoDocumento = new();
+            archivoSeleccionado = null;
+            mostrarModalSubir = false;
+            await JS.InvokeVoidAsync("alert", "Documento subido con éxito.");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Error al subir el documento.");
+        }
+    }
+
+    // Métodos para eliminar y editar documentos (cuando los muestres en la tabla, por ejemplo en Detalle)
+    private async Task EliminarDocumento(int documentoId)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "¿Eliminar este documento?");
+        if (!confirm) return;
+
+        var response = await Http.DeleteAsync($"https://localhost:7185/api/Expediente/{documentoId}");
+        if (response.IsSuccessStatusCode)
+        {
+            // Si tienes una lista de documentos aquí, recárgala, o llama a un método como await CargarDocumentos();
+            await JS.InvokeVoidAsync("alert", "Documento eliminado con éxito.");
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "No se pudo eliminar el documento.");
+        }
+    }
+
+    private void EditarDocumento(DocumentoExpedienteDto doc)
+    {
+        // Aquí abres un modal similar al de subir, pero rellenas el modelo con los datos de doc
+        // Si necesitas el código para editar, ¡pídemelo y te lo armo completo!
+    }
+
+    public class NuevoDocumentoModel
+    {
+        public string TipoDocumento { get; set; } = "";
+    }
+
+    // Si necesitas el modelo para DocumentoExpedienteDto aquí:
+    public class DocumentoExpedienteDto
+    {
+        public int Id { get; set; }
+        public string TipoDocumento { get; set; }
+        public string RutaArchivo { get; set; }
+        public DateTime FechaSubida { get; set; }
+    }
 }

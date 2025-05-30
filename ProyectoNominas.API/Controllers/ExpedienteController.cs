@@ -63,6 +63,35 @@ namespace ProyectoNominas.API.Controllers
         // GET: api/Expediente/validar2/{empleadoId} (VALIDACIÓN usando el service y DTO)
         [HttpGet("validar2/{empleadoId}")]
         public async Task<ActionResult<ExpedienteValidacionDto>> ValidarExpedienteDto(int empleadoId)
-            => Ok(await _service.ValidarExpediente(empleadoId));
+        {
+            try
+            {
+                return Ok(await _service.ValidarExpediente(empleadoId));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message + " - " + ex.StackTrace);
+            }
+        }
+        [HttpGet("tipos-obligatorios")]
+        public async Task<ActionResult<List<string>>> GetTiposDocumentoObligatorios()
+        {
+            var tipos = await _context.ConfiguracionesExpediente
+                .Where(c => c.Obligatorio)
+                .Select(c => c.TipoDocumento)
+                .ToListAsync();
+            return Ok(tipos);
+        }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarDocumento(int id)
+        {
+            var doc = await _context.DocumentosEmpleado.FindAsync(id);
+            if (doc == null)
+                return NotFound();
+
+            _context.DocumentosEmpleado.Remove(doc);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }

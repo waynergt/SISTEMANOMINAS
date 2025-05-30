@@ -17,12 +17,17 @@ namespace ProyectoNominas.API.Data
         public DbSet<Puesto> Puestos { get; set; }
         public DbSet<DocumentoEmpleado> DocumentosEmpleado { get; set; }
 
+        public DbSet<Nomina> Nominas { get; set; }
+        public DbSet<DetalleNomina> DetallesNomina { get; set; }
+        public DbSet<HistorialAjusteNomina> HistorialAjustesNomina { get; set; }
+        public DbSet<HorasTrabajadas> HorasTrabajadas { get; set; }
+
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Rol> Roles { get; set; }
         public DbSet<UsuarioRol> UsuarioRoles { get; set; }
         public DbSet<ConfiguracionExpediente> ConfiguracionesExpediente { get; set; }
         public DbSet<InformacionAcademica> InformacionesAcademicas { get; set; }
-        public DbSet<Nomina> Nominas { get; set; }
+
         public DbSet<DescuentoLegal> DescuentosLegales { get; set; }
         public DbSet<DetalleDescuentoNomina> DetallesDescuentoNomina { get; set; }
 
