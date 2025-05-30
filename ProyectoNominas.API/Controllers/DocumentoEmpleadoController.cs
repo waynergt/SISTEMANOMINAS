@@ -10,125 +10,81 @@ namespace ProyectoNominas.API.Controllers
     public class DocumentoEmpleadoController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _env;
 
-        public DocumentoEmpleadoController(ApplicationDbContext context, IWebHostEnvironment env)
+        public DocumentoEmpleadoController(ApplicationDbContext context)
         {
             _context = context;
-            _env = env;
         }
 
         // GET: api/DocumentoEmpleado
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DocumentoEmpleadoDto>>> GetDocumentos()
+        public async Task<ActionResult<IEnumerable<DocumentoEmpleado>>> GetDocumentos()
         {
             return await _context.DocumentosEmpleado
                 .Include(d => d.Empleado)
-                .Select(d => new DocumentoEmpleadoDto
-                {
-                    Id = d.Id,
-                    EmpleadoId = d.EmpleadoId,
-                    TipoDocumento = d.TipoDocumento,
-                    UrlArchivo = d.RutaArchivo,
-                    FechaSubida = d.FechaSubida
-                })
                 .ToListAsync();
         }
 
         // GET: api/DocumentoEmpleado/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<DocumentoEmpleadoDto>> GetDocumento(int id)
+        public async Task<ActionResult<DocumentoEmpleado>> GetDocumento(int id)
         {
-            var d = await _context.DocumentosEmpleado
+            var documento = await _context.DocumentosEmpleado
                 .Include(d => d.Empleado)
-                .Where(d => d.Id == id)
-                .Select(d => new DocumentoEmpleadoDto
-                {
-                    Id = d.Id,
-                    EmpleadoId = d.EmpleadoId,
-                    TipoDocumento = d.TipoDocumento,
-                    UrlArchivo = d.RutaArchivo,
-                    FechaSubida = d.FechaSubida
-                }).FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(d => d.Id == id);
 
-            if (d == null)
+            if (documento == null)
                 return NotFound();
 
-            return d;
-        }
-
-        // GET: api/DocumentoEmpleado/empleado/5
-        [HttpGet("empleado/{empleadoId}")]
-        public async Task<ActionResult<IEnumerable<DocumentoEmpleadoDto>>> GetDocumentosEmpleado(int empleadoId)
-        {
-            return await _context.DocumentosEmpleado
-                .Where(d => d.EmpleadoId == empleadoId)
-                .Select(d => new DocumentoEmpleadoDto
-                {
-                    Id = d.Id,
-                    EmpleadoId = d.EmpleadoId,
-                    TipoDocumento = d.TipoDocumento,
-                    UrlArchivo = d.RutaArchivo,
-                    FechaSubida = d.FechaSubida
-                })
-                .ToListAsync();
+            return documento;
         }
 
         // POST: api/DocumentoEmpleado
         [HttpPost]
-        public async Task<ActionResult<DocumentoEmpleadoDto>> PostDocumento([FromForm] DocumentoEmpleadoCreateDto dto)
+        public async Task<ActionResult<DocumentoEmpleado>> PostDocumento(DocumentoEmpleado documento)
         {
-            if (dto.Archivo == null || dto.Archivo.Length == 0)
-                return BadRequest("Debe subir un archivo.");
-
-            var uploads = Path.Combine(_env.WebRootPath, "expedientes");
-            if (!Directory.Exists(uploads))
-                Directory.CreateDirectory(uploads);
-
-            var nombreArchivo = $"{Guid.NewGuid()}_{dto.Archivo.FileName}";
-            var rutaArchivo = Path.Combine(uploads, nombreArchivo);
-
-            using (var stream = System.IO.File.Create(rutaArchivo))
-            {
-                await dto.Archivo.CopyToAsync(stream);
-            }
-
-            var documento = new DocumentoEmpleado
-            {
-                EmpleadoId = dto.EmpleadoId,
-                TipoDocumento = dto.TipoDocumento,
-                RutaArchivo = $"/expedientes/{nombreArchivo}",
-                FechaSubida = DateTime.UtcNow
-            };
             _context.DocumentosEmpleado.Add(documento);
             await _context.SaveChangesAsync();
 
-            var result = new DocumentoEmpleadoDto
+            return CreatedAtAction(nameof(GetDocumento), new { id = documento.Id }, documento);
+        }
+
+        // PUT: api/DocumentoEmpleado/5
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutDocumento(int id, DocumentoEmpleado documento)
+        {
+            if (id != documento.Id)
+                return BadRequest();
+
+            _context.Entry(documento).State = EntityState.Modified;
+
+            try
             {
-                Id = documento.Id,
-                EmpleadoId = documento.EmpleadoId,
-                TipoDocumento = documento.TipoDocumento,
-                UrlArchivo = documento.RutaArchivo,
-                FechaSubida = documento.FechaSubida
-            };
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.DocumentosEmpleado.Any(d => d.Id == id))
+                    return NotFound();
+                else
+                    throw;
+            }
 
-            return CreatedAtAction(nameof(GetDocumento), new { id = documento.Id }, result);
+            return NoContent();
         }
 
-        public class DocumentoEmpleadoDto
+        // DELETE: api/DocumentoEmpleado/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteDocumento(int id)
         {
-            public int Id { get; set; }
-            public int EmpleadoId { get; set; }
-            public string? TipoDocumento { get; set; }
-            public string? UrlArchivo { get; set; }
-            public DateTime FechaSubida { get; set; }
-        }
+            var documento = await _context.DocumentosEmpleado.FindAsync(id);
+            if (documento == null)
+                return NotFound();
 
-        public class DocumentoEmpleadoCreateDto
-        {
-            public int EmpleadoId { get; set; }
-            public string? TipoDocumento { get; set; }
-            public IFormFile? Archivo { get; set; }
+            _context.DocumentosEmpleado.Remove(documento);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
