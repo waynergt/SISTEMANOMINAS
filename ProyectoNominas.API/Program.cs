@@ -41,6 +41,7 @@ namespace ProyectoNominas.API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<ReporteNominaService>();
+            builder.Services.AddScoped<InformacionAcademicaService>();  
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>

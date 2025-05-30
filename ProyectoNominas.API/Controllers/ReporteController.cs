@@ -18,7 +18,7 @@ namespace ProyectoNominas.API.Controllers
             _reporteService = reporteService;
         }
 
-        // GET: api/Reporte/empleados?estado=Activo
+        // Empleados por estado
         [HttpGet("empleados")]
         public async Task<IActionResult> GenerarReporteEmpleados([FromQuery] string estado)
         {
@@ -34,7 +34,7 @@ namespace ProyectoNominas.API.Controllers
             return File(pdf, "application/pdf", $"reporte_empleados_{estado.ToLower()}.pdf");
         }
 
-        // GET: api/Reporte/expediente?empleadoId=1
+        // Expediente empleado por ID
         [HttpGet("expediente")]
         public async Task<IActionResult> GenerarReporteExpedienteEmpleado([FromQuery] int empleadoId)
         {
@@ -51,6 +51,39 @@ namespace ProyectoNominas.API.Controllers
 
             return File(pdf, "application/pdf", $"expediente_empleado_{empleadoId}.pdf");
         }
+
+        // Descuentos por DPI (usando DetalleDescuentoNomina)
+        [HttpGet("descuentos-dpi")]
+        public async Task<IActionResult> ReporteDescuentosPorDpi([FromQuery] string dpi)
+        {
+            var detalles = await _context.DetallesDescuentoNomina
+                .Include(d => d.Nomina).ThenInclude(n => n.Empleado)
+                .Include(d => d.DescuentoLegal)
+                .Where(d => d.Nomina.Empleado.Dpi == dpi)
+                .ToListAsync();
+
+            if (!detalles.Any())
+                return NotFound("No se encontraron descuentos para ese DPI.");
+
+            var pdf = _reporteService.GenerarReporteDescuentosPorDpi(detalles, dpi);
+            return File(pdf, "application/pdf", $"reporte_descuentos_{dpi}.pdf");
+        }
+        // GET: api/Reporte/nomina-por-periodo?inicio=2024-01-01&fin=2024-02-01
+        [HttpGet("nomina-por-periodo")]
+        public async Task<IActionResult> GenerarReporteNominaPorPeriodo([FromQuery] DateTime inicio, [FromQuery] DateTime fin)
+        {
+            var nominas = await _context.Nominas
+                .Include(n => n.Empleado)
+                .Where(n => n.FechaPago >= inicio && n.FechaPago <= fin)
+                .ToListAsync();
+
+            if (!nominas.Any())
+                return NotFound("No hay nóminas en el período seleccionado.");
+
+            var pdf = _reporteService.GenerarReporteNominasPorPeriodo(nominas, inicio, fin);
+            return File(pdf, "application/pdf", $"reporte_nominas_{inicio:yyyyMMdd}_{fin:yyyyMMdd}.pdf");
+        }
+        // GET: api/Reporte/expediente-dpi?dpi=XXXXXXXXXXXX
         [HttpGet("expediente-dpi")]
         public async Task<IActionResult> GenerarReporteExpedientePorDpi([FromQuery] string dpi)
         {
@@ -66,11 +99,11 @@ namespace ProyectoNominas.API.Controllers
                     return NotFound("Empleado no encontrado.");
 
                 var pdf = _reporteService.GenerarReporteExpedienteEmpleado(empleado);
-                return File(pdf, "application/pdf", $"expediente_empleado_{dpi}.pdf");
+                return File(pdf, "application/pdf", $"expediente_{dpi}.pdf");
             }
             catch (Exception ex)
             {
-                // Esto enviará el error real al frontend para depuración
+                // Esto te mostrará el error real al cliente (útil para depurar)
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }

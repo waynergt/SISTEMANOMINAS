@@ -45,6 +45,9 @@ else
                         <button class="btn btn-outline-primary btn-sm me-2" @onclick="@(() => EditarEmpleado(emp.Id))">
                             <i class="bi bi-pencil-square"></i>
                         </button>
+                        <button class="btn btn-outline-info btn-sm me-2" @onclick="@(() => VerDetalleEmpleado(emp.Id))">
+                            <i class="bi bi-eye"></i>
+                        </button>
                         <button class="btn btn-outline-danger btn-sm" @onclick="@(() => EliminarEmpleado(emp.Id))">
                             <i class="bi bi-trash"></i>
                         </button>
@@ -56,6 +59,7 @@ else
 }
 
 @code {
+    
     private List<Empleado>? empleados;
     private string? error;
 
@@ -71,7 +75,7 @@ else
             empleados = new List<Empleado>();
         }
     }
-
+    void VerDetalleEmpleado(int id) => Navigation.NavigateTo($"/empleados/detalle/{id}");
     void AgregarEmpleado() => Navigation.NavigateTo("/empleados/agregar");
     void EditarEmpleado(int id) => Navigation.NavigateTo($"/empleados/editar/{id}");
 

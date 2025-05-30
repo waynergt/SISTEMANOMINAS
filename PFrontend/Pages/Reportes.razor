@@ -4,111 +4,50 @@
 
 <h3>📄 Reportes PDF</h3>
 
-<div class="mt-4">
-    <label>Seleccione el tipo de reporte:</label>
-    <select @bind="reporteSeleccionado" class="form-control">
-        <option value="">-- Seleccione --</option>
-        <option value="nomina">Nómina por período</option>
-        <option value="empleados">Empleados por estado</option>
-        <option value="descuentos">Descuentos por DPI</option>
-        <option value="expediente">Expediente del empleado por DPI</option>
-    </select>
+<div>
+    <label>Estado:</label>
+    <input @bind="estado" placeholder="Ingrese estado (ej: Activo)" />
+    <button @onclick="DescargarEmpleadosPorEstado">Descargar Empleados</button>
 </div>
 
-@if (reporteSeleccionado == "nomina")
-{
-    <div class="row mt-3">
-        <div class="col">
-            <label>Fecha inicio:</label>
-            <input type="date" @bind="fechaInicio" class="form-control" />
-        </div>
-        <div class="col">
-            <label>Fecha fin:</label>
-            <input type="date" @bind="fechaFin" class="form-control" />
-        </div>
-        <div class="col align-self-end">
-            <button class="btn btn-primary" @onclick="DescargarNominaPorPeriodo">Descargar Nómina</button>
-        </div>
-    </div>
-}
-
-@if (reporteSeleccionado == "empleados")
-{
-    <div class="row mt-3">
-        <div class="col">
-            <label>Estado:</label>
-            <select @bind="estadoSeleccionado" class="form-control">
-                <option value="">-- Seleccione --</option>
-                @foreach (var estado in estadosDisponibles)
-                {
-                    <option value="@estado">@estado</option>
-                }
-            </select>
-        </div>
-        <div class="col align-self-end">
-            <button class="btn btn-secondary" @onclick="DescargarEmpleadosPorEstadoDropdown">Descargar Empleados</button>
-        </div>
-    </div>
-}
-
-@if (reporteSeleccionado == "descuentos")
-{
-    <div class="row mt-3">
-        <div class="col">
-            <label>DPI del empleado:</label>
-            <input @bind="dpiBusquedaDescuento" placeholder="Ingrese DPI" class="form-control" />
-        </div>
-        <div class="col align-self-end">
-            <button class="btn btn-success" @onclick="DescargarDescuentosPorDpi">Descargar Descuentos</button>
-        </div>
-    </div>
-}
-
-@if (reporteSeleccionado == "expediente")
-{
-    <div class="row mt-3">
-        <div class="col">
-            <label>DPI del empleado:</label>
-            <input @bind="dpiBusquedaExpediente" placeholder="Ingrese DPI" class="form-control" />
-        </div>
-        <div class="col align-self-end">
-            <button class="btn btn-info" @onclick="DescargarExpedientePorDpi">Descargar Expediente</button>
-        </div>
-    </div>
-}
-
-@if (isLoading)
-{
-    <div class="d-flex justify-content-center align-items-center" style="height: 60px;">
-        <div class="spinner-border text-primary" role="status">
-            <span class="visually-hidden">Cargando...</span>
-        </div>
-    </div>
-}
+<div>
+    <label>DPI:</label>
+    <input @bind="dpi" placeholder="Ingrese DPI" />
+    <button @onclick="DescargarDescuentosPorDpi">Descargar Descuentos</button>
+</div>
+<div>
+    <label>Fecha inicio:</label>
+    <input type="date" @bind="fechaInicio" />
+    <label>Fecha fin:</label>
+    <input type="date" @bind="fechaFin" />
+    <button @onclick="DescargarNominaPorPeriodo">Descargar Nómina por Período</button>
+</div>
+<div>
+    <label>DPI:</label>
+    <input @bind="dpiBusquedaExpediente" placeholder="Ingrese DPI" />
+    <button @onclick="DescargarExpedientePorDpi">Descargar Expediente por DPI</button>
+</div>
 
 @code {
-
-    private string reporteSeleccionado;
-
-    // Nómina
     private DateTime? fechaInicio;
     private DateTime? fechaFin;
 
-    // Empleados por estado
-    private List<string> estadosDisponibles = new();
-    private string estadoSeleccionado;
+    private string estado;
+    private string dpi;
 
-    // Descuentos por DPI
-    private string dpiBusquedaDescuento;
-
-    // Expediente por DPI
     private string dpiBusquedaExpediente;
 
-    private bool isLoading = false;
-
-    protected override async Task OnInitializedAsync()
+    private async Task DescargarExpedientePorDpi()
     {
-        estadosDisponibles = await Http.GetFromJsonAsync<List<string>>("api/Reporte/estados") ?? new List<string>();
+        if (string.IsNullOrWhiteSpace(dpiBusquedaExpediente))
+        {
+            await JS.InvokeVoidAsync("alert", "Ingrese un DPI válido.");
+            return;
+        }
+        var url = $"api/Reporte/expediente-dpi?dpi={dpiBusquedaExpediente}";
+        var bytes = await Http.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("descargarPDF", base64, $"expediente_{dpiBusquedaExpediente}.pdf");
     }
 
     private async Task DescargarNominaPorPeriodo()
@@ -118,99 +57,37 @@
             await JS.InvokeVoidAsync("alert", "Seleccione ambas fechas.");
             return;
         }
-        isLoading = true; StateHasChanged();
-        try
-        {
-            var hay = await Http.GetFromJsonAsync<bool>($"api/Reporte/hay-nominas?inicio={fechaInicio:yyyy-MM-dd}&fin={fechaFin:yyyy-MM-dd}");
-            if (!hay)
-            {
-                await JS.InvokeVoidAsync("alert", "No hay nóminas en el período seleccionado.");
-                return;
-            }
-            var url = $"api/Reporte/pdf?inicio={fechaInicio:yyyy-MM-dd}&fin={fechaFin:yyyy-MM-dd}";
-            await DescargarArchivo(url, $"reporte_nominas_{fechaInicio:yyyyMMdd}_{fechaFin:yyyyMMdd}.pdf");
-        }
-        finally { isLoading = false; StateHasChanged(); }
+        var url = $"api/Reporte/nomina-por-periodo?inicio={fechaInicio:yyyy-MM-dd}&fin={fechaFin:yyyy-MM-dd}";
+        var bytes = await Http.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("descargarPDF", base64, $"reporte_nominas_{fechaInicio:yyyyMMdd}_{fechaFin:yyyyMMdd}.pdf");
     }
 
-    private async Task DescargarEmpleadosPorEstadoDropdown()
+    private async Task DescargarEmpleadosPorEstado()
     {
-        if (string.IsNullOrWhiteSpace(estadoSeleccionado))
+        if (string.IsNullOrWhiteSpace(estado))
         {
-            await JS.InvokeVoidAsync("alert", "Seleccione un estado.");
+            await JS.InvokeVoidAsync("alert", "Ingrese un estado de empleado");
             return;
         }
-        isLoading = true; StateHasChanged();
-        try
-        {
-            var hay = await Http.GetFromJsonAsync<bool>($"api/Reporte/hay-empleados?estado={estadoSeleccionado}");
-            if (!hay)
-            {
-                await JS.InvokeVoidAsync("alert", $"No hay empleados con estado '{estadoSeleccionado}'.");
-                return;
-            }
-            var url = $"api/Reporte/empleados?estado={estadoSeleccionado}";
-            await DescargarArchivo(url, $"reporte_empleados_{estadoSeleccionado}.pdf");
-        }
-        finally { isLoading = false; StateHasChanged(); }
+
+        var url = $"api/Reporte/empleados?estado={estado}";
+        var bytes = await Http.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("descargarPDF", base64, $"reporte_empleados_{estado}.pdf");
     }
 
     private async Task DescargarDescuentosPorDpi()
     {
-        if (string.IsNullOrWhiteSpace(dpiBusquedaDescuento))
+        if (string.IsNullOrWhiteSpace(dpi))
         {
-            await JS.InvokeVoidAsync("alert", "Ingrese un DPI válido.");
+            await JS.InvokeVoidAsync("alert", "Ingrese un DPI");
             return;
         }
-        isLoading = true; StateHasChanged();
-        try
-        {
-            var hay = await Http.GetFromJsonAsync<bool>($"api/Reporte/hay-descuentos-dpi?dpi={dpiBusquedaDescuento}");
-            if (!hay)
-            {
-                await JS.InvokeVoidAsync("alert", "No se encontraron descuentos para ese DPI.");
-                return;
-            }
-            var url = $"api/Reporte/descuentos-dpi?dpi={dpiBusquedaDescuento}";
-            await DescargarArchivo(url, $"reporte_descuentos_{dpiBusquedaDescuento}.pdf");
-        }
-        finally { isLoading = false; StateHasChanged(); }
-    }
 
-    private async Task DescargarExpedientePorDpi()
-    {
-        if (string.IsNullOrWhiteSpace(dpiBusquedaExpediente))
-        {
-            await JS.InvokeVoidAsync("alert", "Ingrese un DPI válido.");
-            return;
-        }
-        isLoading = true; StateHasChanged();
-        try
-        {
-            var hay = await Http.GetFromJsonAsync<bool>($"api/Reporte/hay-expediente-dpi?dpi={dpiBusquedaExpediente}");
-            if (!hay)
-            {
-                await JS.InvokeVoidAsync("alert", "No se encontró expediente para ese DPI.");
-                return;
-            }
-            var url = $"api/Reporte/expediente-dpi?dpi={dpiBusquedaExpediente}";
-            await DescargarArchivo(url, $"expediente_{dpiBusquedaExpediente}.pdf");
-        }
-        finally { isLoading = false; StateHasChanged(); }
-    }
-
-    // SOLO UNA VEZ este método:
-    private async Task DescargarArchivo(string url, string nombreArchivo)
-    {
-        try
-        {
-            var bytes = await Http.GetByteArrayAsync(url);
-            var base64 = Convert.ToBase64String(bytes);
-            await JS.InvokeVoidAsync("descargarPDF", base64, nombreArchivo);
-        }
-        catch (Exception ex)
-        {
-            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
-        }
+        var url = $"api/Reporte/descuentos-dpi?dpi={dpi}";
+        var bytes = await Http.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("descargarPDF", base64, $"reporte_descuentos_{dpi}.pdf");
     }
 }

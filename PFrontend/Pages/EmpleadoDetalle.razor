@@ -1,0 +1,168 @@
+﻿@page "/empleados/detalle/{EmpleadoId:int}"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<h3>Detalle del Empleado</h3>
+
+@if (empleado == null)
+{
+    <p>Cargando empleado...</p>
+}
+else
+{
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>@empleado.Nombre @empleado.Apellido</h5>
+            <p><b>DPI:</b> @empleado.Dpi</p>
+            <p><b>Departamento:</b> @empleado.DepartamentoId</p>
+            <p><b>Puesto:</b> @empleado.PuestoId</p>
+            <!-- Puedes agregar más campos aquí -->
+        </div>
+    </div>
+
+    <h4>Información Académica</h4>
+
+    @if (informaciones == null)
+    {
+        <p>Cargando información académica...</p>
+    }
+    else if (!informaciones.Any())
+    {
+        <p>No hay información académica registrada.</p>
+    }
+    else
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Institución</th>
+                    <th>Fecha de Graduación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var info in informaciones)
+                {
+                    <tr>
+                        <td>@info.Titulo</td>
+                        <td>@info.Institucion</td>
+                        <td>@info.FechaGraduacion.ToShortDateString()</td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" @onclick="() => EliminarInfo(info.Id)">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    <h5>Agregar Información Académica</h5>
+    <EditForm Model="@nuevaInfo" OnValidSubmit="AgregarInformacionAcademica">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="mb-2">
+            <label class="form-label">Título</label>
+            <InputText class="form-control" @bind-Value="nuevaInfo.Titulo" />
+        </div>
+        <div class="mb-2">
+            <label class="form-label">Institución</label>
+            <InputText class="form-control" @bind-Value="nuevaInfo.Institucion" />
+        </div>
+        <div class="mb-2">
+            <label class="form-label">Fecha de Graduación</label>
+            <InputDate class="form-control" @bind-Value="nuevaInfo.FechaGraduacion" />
+        </div>
+        <button class="btn btn-success" type="submit">Agregar</button>
+    </EditForm>
+}
+
+<button class="btn btn-secondary mt-3" @onclick="VolverALista">Volver a lista</button>
+
+@code {
+    [Parameter]
+    public int EmpleadoId { get; set; }
+
+    private Empleado? empleado;
+    private List<InformacionAcademicaDto> informaciones = new();
+    private NuevaInformacionAcademicaDto nuevaInfo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEmpleado();
+        await CargarInformacionAcademica();
+        nuevaInfo.EmpleadoId = EmpleadoId;
+    }
+
+    private async Task CargarEmpleado()
+    {
+        empleado = await Http.GetFromJsonAsync<Empleado>($"https://localhost:7185/api/Empleados/{EmpleadoId}");
+    }
+
+    private async Task CargarInformacionAcademica()
+    {
+        informaciones = await Http.GetFromJsonAsync<List<InformacionAcademicaDto>>($"https://localhost:7185/api/InformacionAcademica/empleado/{EmpleadoId}");
+    }
+
+    private async Task AgregarInformacionAcademica()
+    {
+        nuevaInfo.EmpleadoId = EmpleadoId;
+        var response = await Http.PostAsJsonAsync("https://localhost:7185/api/InformacionAcademica", nuevaInfo);
+        if (response.IsSuccessStatusCode)
+        {
+            nuevaInfo = new NuevaInformacionAcademicaDto { EmpleadoId = EmpleadoId };
+            await CargarInformacionAcademica();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Error al agregar información académica.");
+        }
+    }
+
+    private async Task EliminarInfo(int infoId)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "¿Eliminar este registro académico?");
+        if (!confirm) return;
+
+        var response = await Http.DeleteAsync($"https://localhost:7185/api/InformacionAcademica/{infoId}");
+        if (response.IsSuccessStatusCode)
+        {
+            await CargarInformacionAcademica();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "No se pudo eliminar la información académica.");
+        }
+    }
+
+    void VolverALista() => Navigation.NavigateTo("/empleados");
+
+    // Modelos auxiliares
+    public class InformacionAcademicaDto
+    {
+        public int Id { get; set; }
+        public string Titulo { get; set; }
+        public string Institucion { get; set; }
+        public DateTime FechaGraduacion { get; set; }
+        public int EmpleadoId { get; set; }
+    }
+    public class NuevaInformacionAcademicaDto
+    {
+        public string Titulo { get; set; }
+        public string Institucion { get; set; }
+        public DateTime FechaGraduacion { get; set; } = DateTime.Today;
+        public int EmpleadoId { get; set; }
+    }
+    public class Empleado
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+        public string Dpi { get; set; }
+        public int DepartamentoId { get; set; }
+        public int PuestoId { get; set; }
+    }
+}
