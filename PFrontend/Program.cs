@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using PFrontend.Services;
 
 namespace PFrontend
 {
@@ -14,6 +15,7 @@ namespace PFrontend
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7185/") });
             builder.Services.AddScoped<ExpedienteService>();
+            builder.Services.AddScoped<AuthService>();
 
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("es-GT");
             CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("es-GT");

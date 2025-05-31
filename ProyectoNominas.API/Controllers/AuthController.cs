@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ProyectoNominas.API.Data;
-using ProyectoNominas.API.Domain.Entities;
+using ProyectoNominas.API.Domain.DTOs;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -21,50 +23,67 @@ namespace ProyectoNominas.API.Controllers
             _config = config;
         }
 
-        public class LoginRequest
-        {
-            public string Correo { get; set; } = string.Empty;
-            public string Contrasena { get; set; } = string.Empty;
-        }
-
+        [AllowAnonymous]
         [HttpPost("login")]
-        public IActionResult Login(LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var usuario = _context.Usuarios.FirstOrDefault(u =>
-                u.Correo == request.Correo && u.ContrasenaHash == request.Contrasena && u.EstaActivo);
+            Console.WriteLine($"Correo recibido: {request.Correo}");
+            Console.WriteLine($"Contraseña recibida: {request.Contrasena}");
+
+            var usuario = await _context.Usuarios
+                .Include(u => u.UsuarioRoles)
+                    .ThenInclude(ur => ur.Rol)
+                .FirstOrDefaultAsync(u => u.Correo == request.Correo);
 
             if (usuario == null)
-                return Unauthorized("Credenciales inválidas");
+            {
+                Console.WriteLine("Usuario NO encontrado");
+                return Unauthorized();
+            }
 
-            var roles = _context.UsuarioRoles
-                .Where(ur => ur.UsuarioId == usuario.Id)
-                .Select(ur => ur.Rol!.Nombre)
-                .ToList();
+            Console.WriteLine($"Hash en BD: {usuario.ContrasenaHash}");
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Contrasena, usuario.ContrasenaHash))
+            {
+                Console.WriteLine("Contraseña incorrecta");
+                return Unauthorized();
+            }
+
+            Console.WriteLine("Login exitoso");
+
+            var roles = usuario.UsuarioRoles.Select(ur => ur.Rol.Nombre).ToList();
 
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, usuario.NombreUsuario),
-                new Claim(ClaimTypes.Email, usuario.Correo)
+                new Claim(ClaimTypes.Name, usuario.Correo),
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString())
             };
+            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
-            foreach (var rol in roles)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, rol));
-            }
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-            var token = new JwtSecurityToken(
-                issuer: _config["Jwt:Issuer"],
-                audience: _config["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
-                signingCredentials: creds
-            );
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.AddHours(2),
+                SigningCredentials = creds
+            };
 
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-            return Ok(new { token = jwt });
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            var tokenString = tokenHandler.WriteToken(token);
+
+            return Ok(new
+            {
+                token = tokenString,
+                usuario = new
+                {
+                    usuario.Id,
+                    usuario.Correo,
+                    Roles = roles
+                }
+            });
         }
     }
 }

@@ -2,6 +2,12 @@
 using Microsoft.EntityFrameworkCore;
 using ProyectoNominas.API.Data;
 using ProyectoNominas.API.Domain.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Linq;
+
+// Asegúrate de tener el DTO en tu proyecto (ver ejemplo debajo)
+using ProyectoNominas.API.Domain.DTOs;
 
 namespace ProyectoNominas.API.Controllers
 {
@@ -41,14 +47,27 @@ namespace ProyectoNominas.API.Controllers
             return usuario;
         }
 
-        // POST: api/Usuario
-        [HttpPost]
-        public async Task<ActionResult<Usuario>> PostUsuario(Usuario usuario)
+        // POST: api/Usuario/registrar
+        [HttpPost("registrar")]
+        public async Task<IActionResult> RegistrarUsuario([FromBody] UsuarioRegistroDto dto)
         {
+            var usuario = new Usuario
+            {
+                NombreUsuario = dto.NombreUsuario,
+                Correo = dto.Correo,
+                ContrasenaHash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena),
+                EstaActivo = dto.EstaActivo,
+            };
+
+            // Relaciona los roles
+            foreach (var rolId in dto.RolesId)
+            {
+                usuario.UsuarioRoles.Add(new UsuarioRol { RolId = rolId });
+            }
+
             _context.Usuarios.Add(usuario);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetUsuario), new { id = usuario.Id }, usuario);
+            return Ok(usuario);
         }
 
         // PUT: api/Usuario/5

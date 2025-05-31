@@ -3,12 +3,24 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @using PFrontend.Models
+@inject AuthService AuthService
+@using PFrontend.Services
 
 <button class="btn btn-link p-0 mb-2" @onclick="VolverAtras" style="color:#202641;">
     <i class="bi bi-arrow-left-circle" style="font-size:1.7rem;"></i>
 </button>
 
 <h3><i class="bi bi-people-fill"></i> Lista de Empleados</h3>
+
+@if (!isAuthenticated)
+{
+    <RedirectToLogin />
+}
+else
+{
+    <h3>Página privada de empleados</h3>
+    <!-- Contenido aquí -->
+}
 
 @if (empleados == null)
 {
@@ -122,6 +134,8 @@ else
 }
 
 @code {
+    private bool isAuthenticated;
+
     async Task VolverAtras()
     {
         await JS.InvokeVoidAsync("history.back");
