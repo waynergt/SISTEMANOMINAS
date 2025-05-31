@@ -3,80 +3,184 @@
 @inject NavigationManager Navigation
 @using PFrontend.Models
 
-<h3>Agregar Nuevo Empleado</h3>
+<style>
+    .agregar-bg {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #232945 0%, #3949AB 100%);
+        padding: 0;
+        margin: 0;
+    }
 
-@if (!string.IsNullOrEmpty(mensaje))
-{
-    <div class="alert alert-success">@mensaje</div>
-}
+    .agregar-card {
+        background: #fff;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 32px rgba(50, 50, 93, 0.13);
+        max-width: 540px;
+        width: 98vw;
+        margin: 2.5rem auto;
+        padding: 2.5rem 2rem 2rem 2rem;
+        position: relative;
+    }
 
-<EditForm Model="nuevoEmpleado" OnValidSubmit="GuardarEmpleado">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div class="mb-3">
-        <label class="form-label">Nombre</label>
-        <InputText class="form-control" @bind-Value="nuevoEmpleado.Nombre" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Apellido</label>
-        <InputText class="form-control" @bind-Value="nuevoEmpleado.Apellido" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">DPI</label>
-        <InputText class="form-control" @bind-Value="nuevoEmpleado.Dpi" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Correo</label>
-        <InputText class="form-control" @bind-Value="nuevoEmpleado.Correo" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Salario</label>
-        <InputNumber class="form-control" @bind-Value="nuevoEmpleado.Salario" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Estado laboral</label>
-        <InputSelect @bind-Value="nuevoEmpleado.EstadoLaboral" class="form-control">
-            <span class="badge bg-success">Activo</span>
-            <span class="badge bg-warning text-dark">Suspendido</span>
-            <span class="badge bg-danger">Retirado</span>
-        </InputSelect>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Departamento</label>
-        <InputSelect @bind-Value="nuevoEmpleado.DepartamentoId" class="form-control">
-            <option value="0">Seleccione departamento</option>
-            @foreach (var dep in departamentos)
-            {
-                <option value="@dep.Id">@dep.Nombre</option>
-            }
-        </InputSelect>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Puesto</label>
-        <InputSelect @bind-Value="nuevoEmpleado.PuestoId" class="form-control">
-            <option value="0">Seleccione puesto</option>
-            @foreach (var puesto in puestos)
-            {
-                <option value="@puesto.Id">@puesto.Nombre</option>
-            }
-        </InputSelect>
-    </div>
-    <button type="submit" class="btn btn-success">Guardar</button>
-    <button type="button" class="btn btn-secondary ms-2" @onclick="Volver">Cancelar</button>
-</EditForm>
+    .agregar-title {
+        color: #232945;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .7rem;
+    }
 
-@if (!string.IsNullOrEmpty(error))
-{
-    <div class="alert alert-danger mt-3">@error</div>
-}
+    .btn-guardar {
+        background: #3949AB;
+        color: #fff;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        transition: background .2s, color .2s;
+        padding: .5rem 1.1rem;
+        box-shadow: 0 2px 10px #23294522;
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+    }
 
-@if (!string.IsNullOrEmpty(jsonDebug))
-{
-    <div class="alert alert-info mt-3">
-        <b>JSON enviado para depuración:</b>
-        <pre>@jsonDebug</pre>
+        .btn-guardar:hover, .btn-guardar:focus {
+            background: #232945;
+            color: #FFB300;
+        }
+
+    .btn-cancelar {
+        background: #FFB300;
+        color: #232945;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-left: 0.5rem;
+        padding: .5rem 1.1rem;
+        transition: background .2s;
+    }
+
+        .btn-cancelar:hover {
+            background: #ffe49c;
+            color: #232945;
+        }
+
+    .form-label {
+        color: #3949AB;
+        font-weight: 600;
+    }
+
+    .form-control:focus {
+        border-color: #3949AB;
+        box-shadow: 0 0 0 2px #3949AB33;
+    }
+
+    .icon-person {
+        font-size: 2.1rem;
+        color: #3949AB;
+        background: #F5F6FA;
+        border-radius: 50%;
+        padding: .55rem;
+    }
+    media (max-width: 575px) {
+        .agregar-card
+
+    {
+        padding: 1.3rem 0.4rem 1rem 0.4rem;
+        max-width: 99vw;
+    }
+
+    }
+</style>
+
+<div class="agregar-bg">
+    <div class="agregar-card">
+        <div class="agregar-title mb-2">
+            <i class="bi bi-person-plus-fill icon-person"></i>
+            Agregar Nuevo Empleado
+        </div>
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="alert alert-success">@mensaje</div>
+        }
+
+        <EditForm Model="nuevoEmpleado" OnValidSubmit="GuardarEmpleado">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="mb-3">
+                <label class="form-label">Nombre</label>
+                <InputText class="form-control" @bind-Value="nuevoEmpleado.Nombre" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Apellido</label>
+                <InputText class="form-control" @bind-Value="nuevoEmpleado.Apellido" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">DPI</label>
+                <InputText class="form-control" @bind-Value="nuevoEmpleado.Dpi" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Correo</label>
+                <InputText class="form-control" @bind-Value="nuevoEmpleado.Correo" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Salario</label>
+                <InputNumber class="form-control" @bind-Value="nuevoEmpleado.Salario" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Estado laboral</label>
+                <InputSelect @bind-Value="nuevoEmpleado.EstadoLaboral" class="form-control">
+                    <option value="">Seleccione estado</option>
+                    <option value="Activo">Activo</option>
+                    <option value="Suspendido">Suspendido</option>
+                    <option value="Retirado">Retirado</option>
+                </InputSelect>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Departamento</label>
+                <InputSelect @bind-Value="nuevoEmpleado.DepartamentoId" class="form-control">
+                    <option value="0">Seleccione departamento</option>
+                    @foreach (var dep in departamentos)
+                    {
+                        <option value="@dep.Id">@dep.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Puesto</label>
+                <InputSelect @bind-Value="nuevoEmpleado.PuestoId" class="form-control">
+                    <option value="0">Seleccione puesto</option>
+                    @foreach (var puesto in puestos)
+                    {
+                        <option value="@puesto.Id">@puesto.Nombre</option>
+                    }
+                </InputSelect>
+            </div>
+            <button type="submit" class="btn-guardar">
+                <i class="bi bi-save"></i> Guardar
+            </button>
+            <button type="button" class="btn-cancelar" @onclick="Volver">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+        </EditForm>
+
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="alert alert-danger mt-3">@error</div>
+        }
+
+        @if (!string.IsNullOrEmpty(jsonDebug))
+        {
+            <div class="alert alert-info mt-3">
+                <b>JSON enviado para depuración:</b>
+                <pre>@jsonDebug</pre>
+            </div>
+        }
     </div>
-}
+</div>
 
 @code {
     private EmpleadoEditModel nuevoEmpleado = new();
