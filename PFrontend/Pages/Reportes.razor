@@ -2,6 +2,10 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 
+<button class="btn btn-link p-0 mb-2" @onclick="VolverAtras" style="color:#202641;">
+    <i class="bi bi-arrow-left-circle" style="font-size:1.7rem;"></i>
+</button>
+
 <h3>📄 Reportes PDF</h3>
 
 <div>
@@ -29,6 +33,11 @@
 </div>
 
 @code {
+
+        async Task VolverAtras()
+        {
+            await JS.InvokeVoidAsync("history.back");
+        }
     private DateTime? fechaInicio;
     private DateTime? fechaFin;
 

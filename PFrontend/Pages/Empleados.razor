@@ -4,6 +4,10 @@
 @inject IJSRuntime JS
 @using PFrontend.Models
 
+<button class="btn btn-link p-0 mb-2" @onclick="VolverAtras" style="color:#202641;">
+    <i class="bi bi-arrow-left-circle" style="font-size:1.7rem;"></i>
+</button>
+
 <h3><i class="bi bi-people-fill"></i> Lista de Empleados</h3>
 
 @if (empleados == null)
@@ -118,6 +122,10 @@ else
 }
 
 @code {
+    async Task VolverAtras()
+    {
+        await JS.InvokeVoidAsync("history.back");
+    }
     private List<Empleado>? empleados;
     private string? error;
 
