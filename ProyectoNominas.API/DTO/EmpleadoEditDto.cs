@@ -1,8 +1,7 @@
-﻿namespace PFrontend.Models
+﻿namespace ProyectoNominas.API.DTO
 {
-    public class Empleado
+    public class EmpleadoEditDto
     {
-        public int Id { get; set; }
         public string Nombre { get; set; } = "";
         public string Apellido { get; set; } = "";
         public DateTime FechaNacimiento { get; set; }
@@ -11,10 +10,8 @@
         public string Correo { get; set; } = "";
         public string Dpi { get; set; } = "";
         public decimal Salario { get; set; }
-        public string EstadoLaboral { get; set; } = "Activo";
+        public string EstadoLaboral { get; set; } 
         public int DepartamentoId { get; set; }
-        public string? Departamento { get; set; }
         public int PuestoId { get; set; }
-        public string? Puesto { get; set; }
     }
 }

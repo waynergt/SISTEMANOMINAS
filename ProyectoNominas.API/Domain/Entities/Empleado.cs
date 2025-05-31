@@ -37,7 +37,7 @@ namespace ProyectoNominas.API.Domain.Entities
 
         [Required]
         [StringLength(20)]
-        public string EstadoLaboral { get; set; } = "Activo";
+        public string EstadoLaboral { get; set; }
 
         // Relaciones
         public int DepartamentoId { get; set; }

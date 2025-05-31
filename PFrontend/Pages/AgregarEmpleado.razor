@@ -2,7 +2,6 @@
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @using PFrontend.Models
-@using PFrontend.Models.PFrontend.Models
 
 <h3>Agregar Nuevo Empleado</h3>
 
@@ -11,33 +10,41 @@
     <div class="alert alert-success">@mensaje</div>
 }
 
-<EditForm Model="empleado" OnValidSubmit="GuardarEmpleado">
+<EditForm Model="nuevoEmpleado" OnValidSubmit="GuardarEmpleado">
     <DataAnnotationsValidator />
     <ValidationSummary />
     <div class="mb-3">
         <label class="form-label">Nombre</label>
-        <InputText class="form-control" @bind-Value="empleado.Nombre" />
+        <InputText class="form-control" @bind-Value="nuevoEmpleado.Nombre" />
     </div>
     <div class="mb-3">
         <label class="form-label">Apellido</label>
-        <InputText class="form-control" @bind-Value="empleado.Apellido" />
+        <InputText class="form-control" @bind-Value="nuevoEmpleado.Apellido" />
     </div>
     <div class="mb-3">
         <label class="form-label">DPI</label>
-        <InputText class="form-control" @bind-Value="empleado.Dpi" />
+        <InputText class="form-control" @bind-Value="nuevoEmpleado.Dpi" />
     </div>
     <div class="mb-3">
         <label class="form-label">Correo</label>
-        <InputText class="form-control" @bind-Value="empleado.Correo" />
+        <InputText class="form-control" @bind-Value="nuevoEmpleado.Correo" />
     </div>
     <div class="mb-3">
         <label class="form-label">Salario</label>
-        <InputNumber class="form-control" @bind-Value="empleado.Salario" />
+        <InputNumber class="form-control" @bind-Value="nuevoEmpleado.Salario" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Estado laboral</label>
+        <InputSelect @bind-Value="nuevoEmpleado.EstadoLaboral" class="form-control">
+            <span class="badge bg-success">Activo</span>
+            <span class="badge bg-warning text-dark">Suspendido</span>
+            <span class="badge bg-danger">Retirado</span>
+        </InputSelect>
     </div>
     <div class="mb-3">
         <label class="form-label">Departamento</label>
-        <InputSelect class="form-control" @bind-Value="empleado.DepartamentoId">
-            <option value="">-- Selecciona un departamento --</option>
+        <InputSelect @bind-Value="nuevoEmpleado.DepartamentoId" class="form-control">
+            <option value="0">Seleccione departamento</option>
             @foreach (var dep in departamentos)
             {
                 <option value="@dep.Id">@dep.Nombre</option>
@@ -46,11 +53,11 @@
     </div>
     <div class="mb-3">
         <label class="form-label">Puesto</label>
-        <InputSelect class="form-control" @bind-Value="empleado.PuestoId">
-            <option value="">-- Selecciona un puesto --</option>
-            @foreach (var pst in puestos)
+        <InputSelect @bind-Value="nuevoEmpleado.PuestoId" class="form-control">
+            <option value="0">Seleccione puesto</option>
+            @foreach (var puesto in puestos)
             {
-                <option value="@pst.Id">@pst.Nombre</option>
+                <option value="@puesto.Id">@puesto.Nombre</option>
             }
         </InputSelect>
     </div>
@@ -72,7 +79,7 @@
 }
 
 @code {
-    private Empleado empleado = new Empleado();
+    private EmpleadoEditModel nuevoEmpleado = new();
     private List<DepartamentoModelV2> departamentos = new();
     private List<PuestoModelV2> puestos = new();
     private string mensaje = "";
@@ -96,9 +103,9 @@
     {
         try
         {
-            jsonDebug = System.Text.Json.JsonSerializer.Serialize(empleado, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            jsonDebug = System.Text.Json.JsonSerializer.Serialize(nuevoEmpleado, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 
-            var response = await Http.PostAsJsonAsync("https://localhost:7185/api/Empleados", empleado);
+            var response = await Http.PostAsJsonAsync("https://localhost:7185/api/Empleados", nuevoEmpleado);
             if (response.IsSuccessStatusCode)
             {
                 mensaje = "Empleado agregado exitosamente.";

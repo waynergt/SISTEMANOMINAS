@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProyectoNominas.API.Data;
-using ProyectoNominas.API.Domain.Entities;
 using ProyectoNominas.API.DTO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+// ALIAS para evitar ambigüedad:
+using EntidadEmpleado = ProyectoNominas.API.Domain.Entities.Empleado;
 
 namespace ProyectoNominas.API.Controllers
 {
@@ -38,7 +36,8 @@ namespace ProyectoNominas.API.Controllers
                     DepartamentoId = e.DepartamentoId,
                     PuestoId = e.PuestoId,
                     Departamento = e.Departamento != null ? e.Departamento.Nombre : string.Empty,
-                    Puesto = e.Puesto != null ? e.Puesto.Nombre : string.Empty
+                    Puesto = e.Puesto != null ? e.Puesto.Nombre : string.Empty,
+                    EstadoLaboral = e.EstadoLaboral
                 })
                 .ToListAsync();
 
@@ -64,7 +63,8 @@ namespace ProyectoNominas.API.Controllers
                     DepartamentoId = e.DepartamentoId,
                     PuestoId = e.PuestoId,
                     Departamento = e.Departamento != null ? e.Departamento.Nombre : string.Empty,
-                    Puesto = e.Puesto != null ? e.Puesto.Nombre : string.Empty
+                    Puesto = e.Puesto != null ? e.Puesto.Nombre : string.Empty,
+                    EstadoLaboral = e.EstadoLaboral
                 })
                 .FirstOrDefaultAsync();
 
@@ -75,23 +75,45 @@ namespace ProyectoNominas.API.Controllers
         }
 
         // POST: api/Empleados
+    
         [HttpPost]
-        public async Task<ActionResult<Empleado>> PostEmpleado(Empleado empleado)
+        public async Task<ActionResult<EntidadEmpleado>> PostEmpleado([FromBody] EmpleadoEditDto empleadoDto)
         {
+            Console.WriteLine($"Estado recibido: {empleadoDto.EstadoLaboral}"); // O usa un log
+            var empleado = new EntidadEmpleado
+            {
+
+                Nombre = empleadoDto.Nombre,
+                Apellido = empleadoDto.Apellido,
+                Dpi = empleadoDto.Dpi,
+                Correo = empleadoDto.Correo,
+                Salario = empleadoDto.Salario,
+                DepartamentoId = empleadoDto.DepartamentoId,
+                PuestoId = empleadoDto.PuestoId,
+                EstadoLaboral = empleadoDto.EstadoLaboral // <-- AGREGADO
+            };
+
             _context.Empleados.Add(empleado);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetEmpleado), new { id = empleado.Id }, empleado);
         }
 
-        // PUT: api/Empleados/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutEmpleado(int id, Empleado empleado)
+        public async Task<IActionResult> PutEmpleado(int id, [FromBody] EmpleadoEditDto empleadoDto)
         {
-            if (id != empleado.Id)
-                return BadRequest();
+            var empleado = await _context.Empleados.FindAsync(id);
+            if (empleado == null)
+                return NotFound();
 
-            _context.Entry(empleado).State = EntityState.Modified;
+            empleado.Nombre = empleadoDto.Nombre;
+            empleado.Apellido = empleadoDto.Apellido;
+            empleado.Dpi = empleadoDto.Dpi;
+            empleado.Correo = empleadoDto.Correo;
+            empleado.Salario = empleadoDto.Salario;
+            empleado.DepartamentoId = empleadoDto.DepartamentoId;
+            empleado.PuestoId = empleadoDto.PuestoId;
+            empleado.EstadoLaboral = empleadoDto.EstadoLaboral;
 
             try
             {

@@ -40,6 +40,14 @@ else
             <InputNumber @bind-Value="empleado.Salario" class="form-control" />
         </div>
         <div class="mb-3">
+            <label class="form-label">Estado laboral</label>
+            <InputSelect @bind-Value="empleado.EstadoLaboral" class="form-control">
+                <option value="Activo">Activo</option>
+                <option value="Suspendido">Suspendido</option>
+                <option value="Retirado">Retirado</option>
+            </InputSelect>
+        </div>
+        <div class="mb-3">
             <label class="form-label">Departamento</label>
             <InputSelect @bind-Value="empleado.DepartamentoId" class="form-control">
                 <option value="">-- Selecciona un departamento --</option>
@@ -68,7 +76,7 @@ else
 @code {
     [Parameter] public int id { get; set; }
 
-    private EmpleadoEditDTO? empleado;
+    private Empleado? empleado;
     private List<DepartamentoModelV2> departamentos = new();
     private List<PuestoModelV2> puestos = new();
 
@@ -76,11 +84,9 @@ else
     {
         try
         {
-            // Cargar catálogos antes de cargar empleado para evitar error de combos vacíos.
             departamentos = await Http.GetFromJsonAsync<List<DepartamentoModelV2>>("https://localhost:7185/api/Departamento") ?? new List<DepartamentoModelV2>();
             puestos = await Http.GetFromJsonAsync<List<PuestoModelV2>>("https://localhost:7185/api/Puesto") ?? new List<PuestoModelV2>();
-
-            empleado = await Http.GetFromJsonAsync<EmpleadoEditDTO>($"api/Empleados/{id}");
+            empleado = await Http.GetFromJsonAsync<Empleado>($"api/Empleados/{id}");
         }
         catch (Exception ex)
         {
