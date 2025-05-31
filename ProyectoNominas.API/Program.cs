@@ -41,6 +41,9 @@ namespace ProyectoNominas.API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<ReporteNominaService>();
+            builder.Services.AddScoped<InformacionAcademicaService>();
+            builder.Services.AddScoped<ExpedienteService>();
+            builder.Services.AddScoped<NominaService>();    
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
@@ -71,6 +74,7 @@ namespace ProyectoNominas.API
 
             app.UseAuthentication(); // ? Autenticación
             app.UseAuthorization();
+            app.UseStaticFiles();
 
             app.MapControllers();
 

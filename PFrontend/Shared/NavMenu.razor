@@ -1,0 +1,67 @@
+﻿@using PFrontend.Services
+@using System.Security.Claims
+@inject AuthService AuthService
+@inject NavigationManager Nav
+@using PFrontend.Services
+
+
+<nav>
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/">Inicio</NavLink>
+        </li>
+        @if (isAuthenticated)
+        {
+            @* Menú visible solo para administradores *@
+            @if (user?.IsInRole("Administrador") == true)
+            {
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/admin">Panel Admin</NavLink>
+                </li>
+            }
+            @* Menú visible solo para empleados *@
+            @if (user?.IsInRole("Empleado") == true)
+            {
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/empleados">Empleados</NavLink>
+                </li>
+            }
+            <li class="nav-item">
+                <button class="btn btn-link nav-link" @onclick="Logout">Cerrar sesión</button>
+            </li>
+            <li class="nav-item">
+                <span class="nav-link disabled">Bienvenido: @user?.Identity?.Name</span>
+            </li>
+        }
+        else
+        {
+            <li class="nav-item">
+                <NavLink class="nav-link" href="/login">Iniciar sesión</NavLink>
+            </li>
+        }
+        @{
+            var rol = user?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+        }
+        @if (isAuthenticated)
+        {
+            <span>Rol: @rol</span>
+        }
+    </ul>
+</nav>
+
+@code {
+    private bool isAuthenticated = false;
+    private ClaimsPrincipal? user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isAuthenticated = await AuthService.IsAuthenticatedAsync();
+        user = await AuthService.GetUserAsync();
+    }
+
+    private async Task Logout()
+    {
+        await AuthService.LogoutAsync();
+        Nav.NavigateTo("/login", true);
+    }
+}

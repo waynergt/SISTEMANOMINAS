@@ -1,0 +1,104 @@
+﻿@page "/integrantes"
+@inject NavigationManager Nav
+
+<style>
+    .integrantes-bg {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #232945 0%, #3949AB 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .integrantes-card {
+        background: #fff;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 32px rgba(50, 50, 93, 0.10);
+        padding: 2.5rem 2rem 2rem 2rem;
+        max-width: 420px;
+        width: 100%;
+    }
+
+    .integrantes-icon {
+        font-size: 3.5rem;
+        color: #fff;
+        background: #3949AB;
+        border-radius: 50%;
+        padding: 1rem;
+        box-shadow: 0 2px 12px #23294566;
+        margin-top: -60px;
+        margin-bottom: 1.2rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 72px;
+        height: 72px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .integrantes-title {
+        text-align: center;
+        font-weight: 700;
+        color: #232945;
+        margin-bottom: 1.2rem;
+    }
+
+    .integrantes-list li {
+        font-size: 1.08rem;
+        margin-bottom: 0.6rem;
+        color: #232945;
+    }
+
+    .integrantes-back-btn {
+        position: absolute;
+        left: 32px;
+        top: 32px;
+        z-index: 10;
+    }
+    media (max-width: 575px) {
+        .integrantes-card
+
+    {
+        padding: 1.2rem 0.5rem 1rem 0.5rem;
+        max-width: 98vw;
+    }
+
+    .integrantes-back-btn {
+        left: 10px;
+        top: 10px;
+    }
+
+    }
+</style>
+
+<div class="integrantes-bg">
+    <div class="integrantes-card position-relative">
+        <button class="btn btn-outline-primary integrantes-back-btn" @onclick="GoBack">
+            <i class="bi bi-arrow-left"></i> Volver
+        </button>
+        <div class="integrantes-icon">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <h3 class="integrantes-title mb-3">Integrantes del Proyecto</h3>
+        <ul class="integrantes-list list-unstyled mb-0">
+            <li>Milton Adrian Martinez Avila</li>
+            <li>Cesar Ulises González Cardona</li>
+            <li>Jose Daniel Bran Benito</li>
+            <li>Amner</li>
+            <li>Wayner Alberto López y López</li>
+            <!-- Agrega los nombres y roles que desees -->
+        </ul>
+    </div>
+</div>
+
+@code {
+    void GoBack()
+    {
+        // Navega a la página anterior si existe, si no, va al inicio
+        if (Nav.Uri.Contains("/integrantes"))
+            Nav.NavigateTo("/", forceLoad: true);
+        else
+            Nav.NavigateTo(Nav.Uri, forceLoad: true);
+    }
+}

@@ -1,0 +1,122 @@
+﻿@page "/puestos"
+@inject HttpClient Http
+
+<h3>Puestos</h3>
+
+@if (puestos == null)
+{
+    <p><em>Cargando...</em></p>
+}
+else
+{
+    <button class="btn btn-success mb-2" @onclick="MostrarAgregar">Agregar Puesto</button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var puesto in puestos)
+            {
+                <tr>
+                    <td>@puesto.Id</td>
+                    <td>@puesto.Nombre</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" @onclick="() => MostrarEditar(puesto)">Editar</button>
+                        <button class="btn btn-sm btn-danger" @onclick="() => EliminarPuesto(puesto.Id)">Eliminar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (mostrarFormulario)
+{
+    <EditForm Model="puestoActual" OnValidSubmit="GuardarPuesto">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="mb-2">
+            <label>Nombre:</label>
+            <InputText class="form-control" @bind-Value="puestoActual.Nombre" />
+        </div>
+        <button class="btn btn-primary" type="submit">Guardar</button>
+        <button class="btn btn-secondary ms-2" type="button" @onclick="CerrarFormulario">Cancelar</button>
+    </EditForm>
+}
+
+@code {
+    List<PuestoDto>? puestos;
+    PuestoDto puestoActual = new();
+    bool mostrarFormulario = false;
+    bool esEdicion = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarPuestos();
+    }
+
+    async Task CargarPuestos()
+    {
+        puestos = await Http.GetFromJsonAsync<List<PuestoDto>>("api/puesto");
+    }
+
+    void MostrarAgregar()
+    {
+        puestoActual = new PuestoDto();
+        esEdicion = false;
+        mostrarFormulario = true;
+    }
+
+    void MostrarEditar(PuestoDto puesto)
+    {
+        puestoActual = new PuestoDto
+            {
+                Id = puesto.Id,
+                Nombre = puesto.Nombre
+            };
+        esEdicion = true;
+        mostrarFormulario = true;
+    }
+
+    async Task GuardarPuesto()
+    {
+        if (esEdicion)
+        {
+            await Http.PutAsJsonAsync($"api/puesto/{puestoActual.Id}", puestoActual);
+        }
+        else
+        {
+            await Http.PostAsJsonAsync("api/puesto", puestoActual);
+        }
+        mostrarFormulario = false;
+        await CargarPuestos();
+        StateHasChanged();
+    }
+
+    async Task EliminarPuesto(int id)
+    {
+        if (await JS.InvokeAsync<bool>("confirm", "¿Seguro que deseas eliminar este puesto?"))
+        {
+            await Http.DeleteAsync($"api/puesto/{id}");
+            await CargarPuestos();
+            StateHasChanged();
+        }
+    }
+
+    void CerrarFormulario()
+    {
+        mostrarFormulario = false;
+    }
+
+    public class PuestoDto
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    [Inject] IJSRuntime JS { get; set; }
+}

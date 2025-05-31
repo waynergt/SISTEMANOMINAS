@@ -1,0 +1,152 @@
+﻿/* --- Tabla personalizada empleados --- */
+.table thead th {
+    vertical-align: middle;
+    text-align: center;
+    font-size: 1.04rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    background: #202641; /* Un azul oscuro para destacar encabezado */
+    color: #fff;
+    border-bottom: 2px solid #3b3f58;
+}
+
+.table tbody td {
+    vertical-align: middle;
+    text-align: center;
+    font-size: 0.99rem;
+    padding-top: 0.55rem;
+    padding-bottom: 0.55rem;
+    background: #f8f9fa;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: #f0f2f5;
+}
+
+.table-bordered th, .table-bordered td {
+    border: 1px solid #c6c7d1;
+}
+
+.table .badge {
+    font-size: 0.95rem;
+    padding: 0.55em 1.1em;
+    border-radius: 1.1rem;
+    font-weight: 500;
+}
+
+.table .btn-group .btn {
+    margin-right: 0.25rem;
+}
+
+    .table .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+
+@media (max-width: 1200px) {
+    .table thead th,
+    .table tbody td {
+        font-size: 0.93rem;
+        padding-left: 0.4rem;
+        padding-right: 0.4rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .table thead th,
+    .table tbody td {
+        font-size: 0.88rem;
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+}
+
+.table .btn,
+.table .btn i {
+    vertical-align: middle;
+}
+
+    .table .btn[title]:hover {
+        filter: brightness(0.95);
+        box-shadow: 0 0 3px #20264144;
+    }
+
+.table .btn-outline-primary {
+    border-color: #1d3557;
+    color: #1d3557;
+}
+
+    .table .btn-outline-primary:hover {
+        background: #1d3557;
+        color: #fff;
+    }
+
+.table .btn-outline-danger {
+    border-color: #e63946;
+    color: #e63946;
+}
+
+    .table .btn-outline-danger:hover {
+        background: #e63946;
+        color: #fff;
+    }
+
+.table .btn-primary {
+    background: #457b9d;
+    border-color: #457b9d;
+}
+
+    .table .btn-primary:hover {
+        background: #335c7d;
+        border-color: #335c7d;
+    }
+
+.table .btn-success {
+    background: #43aa8b;
+    border-color: #43aa8b;
+}
+
+    .table .btn-success:hover {
+        background: #2d6a4f;
+        border-color: #2d6a4f;
+    }
+
+/* --- Ajustes para Responsive Table --- */
+.table-responsive {
+    box-shadow: 0 4px 18px 2px #20264115;
+    background: #fff;
+    border-radius: 0.7rem;
+    overflow-x: auto;
+    margin-bottom: 2rem;
+    margin-top: 1rem;
+    padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+    .table-responsive {
+        padding: 0.2rem;
+    }
+
+    .table thead th, .table tbody td {
+        font-size: 0.81rem;
+        padding: 0.3rem 0.1rem;
+    }
+
+    .table .btn-group .btn {
+        padding: 0.19rem 0.5rem;
+        font-size: 0.86rem;
+    }
+}
+.mi-card-resumen {
+    background: #f8f9fa;
+    border: 1.5px solid #20264133;
+    border-radius: 0.7rem;
+    box-shadow: 0 2px 10px #20264110;
+    padding: 1rem 1.4rem;
+    margin-bottom: 1.2rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+    .mi-card-resumen:hover {
+        box-shadow: 0 4px 18px 2px #20264133;
+        transform: translateY(-3px) scale(1.03);
+    }

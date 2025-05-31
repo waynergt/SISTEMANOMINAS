@@ -1,4 +1,5 @@
-﻿namespace ProyectoNominas.API.Domain.Entities
+﻿
+namespace ProyectoNominas.API.Domain.Entities
 {
     public class DocumentoEmpleado
     {
@@ -8,5 +9,6 @@
 
         public int EmpleadoId { get; set; }
         public Empleado? Empleado { get; set; }
+        public DateTime FechaSubida { get; internal set; }
     }
 }

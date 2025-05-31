@@ -2,52 +2,14 @@
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using ProyectoNominas.API.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ProyectoNominas.API.Services
 {
     public class ReporteNominaService
     {
-        // Reporte de Nómina por período
-        public byte[] GenerarReporte(List<Nomina> nominas)
-        {
-            var documento = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Margin(30);
-                    page.Header().Text("Reporte de Nómina").FontSize(20).Bold().AlignCenter();
-                    page.Content().Table(tabla =>
-                    {
-                        tabla.ColumnsDefinition(columns =>
-                        {
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                        });
-
-                        tabla.Header(header =>
-                        {
-                            header.Cell().Element(CellEstilo).Text("Empleado");
-                            header.Cell().Element(CellEstilo).Text("Fecha Pago");
-                            header.Cell().Element(CellEstilo).Text("Salario");
-                            header.Cell().Element(CellEstilo).Text("Estado");
-                        });
-
-                        foreach (var n in nominas)
-                        {
-                            tabla.Cell().Element(CellEstilo).Text($"{n.Empleado?.Nombre} {n.Empleado?.Apellido}");
-                            tabla.Cell().Element(CellEstilo).Text(n.FechaPago.ToShortDateString());
-                            tabla.Cell().Element(CellEstilo).Text($"Q{n.MontoTotal:N2}");
-                            tabla.Cell().Element(CellEstilo).Text(n.Empleado?.EstadoLaboral);
-                        }
-                    });
-                });
-            });
-
-            return documento.GeneratePdf();
-        }
-
         // Reporte de Empleados por estado
         public byte[] GenerarReporteEmpleados(List<Empleado> empleados, string estado)
         {
@@ -62,10 +24,10 @@ namespace ProyectoNominas.API.Services
                     {
                         tabla.ColumnsDefinition(columns =>
                         {
-                            columns.RelativeColumn(); // Nombre
-                            columns.RelativeColumn(); // Apellido
-                            columns.RelativeColumn(); // DPI
-                            columns.RelativeColumn(); // Correo
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
                         });
 
                         tabla.Header(header =>
@@ -90,59 +52,15 @@ namespace ProyectoNominas.API.Services
             return documento.GeneratePdf();
         }
 
-        // Reporte de Descuentos aplicados a una nómina
-        public byte[] GenerarReporteDescuentos(Nomina nomina)
-        {
-            var documento = Document.Create(container =>
-            {
-                container.Page(page =>
-                {
-                    page.Margin(30);
-
-                    page.Header().Text($"Descuentos aplicados - Nómina #{nomina.Id}")
-                        .FontSize(18).Bold().AlignCenter();
-
-                    page.Content().Column(column =>
-                    {
-                        column.Item().Text($"Empleado: {nomina.Empleado?.Nombre} {nomina.Empleado?.Apellido}");
-                        column.Item().Text($"Fecha de pago: {nomina.FechaPago:dd/MM/yyyy}");
-                        column.Item().Text($"Salario bruto: Q{nomina.MontoTotal:N2}");
-
-                        column.Item().PaddingVertical(10).Table(tabla =>
-                        {
-                            tabla.ColumnsDefinition(columns =>
-                            {
-                                columns.RelativeColumn(); // Nombre descuento
-                                columns.RelativeColumn(); // Monto
-                            });
-
-                            tabla.Header(header =>
-                            {
-                                header.Cell().Element(CellEstilo).Text("Descuento");
-                                header.Cell().Element(CellEstilo).Text("Monto");
-                            });
-
-                            foreach (var d in nomina.DetallesDescuento!)
-                            {
-                                tabla.Cell().Element(CellEstilo).Text(d.DescuentoLegal?.Nombre ?? "N/A");
-                                tabla.Cell().Element(CellEstilo).Text($"Q{d.Monto:N2}");
-                            }
-                        });
-
-                        var totalDescuentos = nomina.DetallesDescuento!.Sum(d => d.Monto);
-                        var neto = nomina.MontoTotal - totalDescuentos;
-
-                        column.Item().PaddingTop(15).Text($"Total descuentos: Q{totalDescuentos:N2}");
-                        column.Item().Text($"Salario neto: Q{neto:N2}").Bold();
-                    });
-
-                });
-            });
-
-            return documento.GeneratePdf();
-        }
+        // Expediente completo de empleado
         public byte[] GenerarReporteExpedienteEmpleado(Empleado empleado)
         {
+            var documentos = empleado.Documentos ?? new List<DocumentoEmpleado>();
+            var estudios = empleado.Estudios ?? new List<InformacionAcademica>();
+            var detallesNomina = empleado.Nominas?.SelectMany(n => n.Detalles ?? new List<DetalleNomina>())
+                .Where(d => d.EmpleadoId == empleado.Id)
+                .ToList() ?? new List<DetalleNomina>();
+
             var documento = Document.Create(container =>
             {
                 container.Page(page =>
@@ -164,7 +82,7 @@ namespace ProyectoNominas.API.Services
 
                         // DOCUMENTOS
                         column.Item().PaddingTop(20).Text("📄 Documentos de expediente").Bold().FontSize(14);
-                        if (empleado.Documentos != null && empleado.Documentos.Any())
+                        if (documentos.Any())
                         {
                             column.Item().Table(tabla =>
                             {
@@ -180,7 +98,7 @@ namespace ProyectoNominas.API.Services
                                     header.Cell().Element(CellEstilo).Text("Ruta");
                                 });
 
-                                foreach (var doc in empleado.Documentos)
+                                foreach (var doc in documentos)
                                 {
                                     tabla.Cell().Element(CellEstilo).Text(doc.TipoDocumento);
                                     tabla.Cell().Element(CellEstilo).Text(doc.RutaArchivo);
@@ -194,15 +112,15 @@ namespace ProyectoNominas.API.Services
 
                         // INFORMACIÓN ACADÉMICA
                         column.Item().PaddingTop(20).Text("🎓 Información académica").Bold().FontSize(14);
-                        if (empleado.Estudios != null && empleado.Estudios.Any())
+                        if (estudios.Any())
                         {
                             column.Item().Table(tabla =>
                             {
                                 tabla.ColumnsDefinition(columns =>
                                 {
-                                    columns.RelativeColumn(); // Título
-                                    columns.RelativeColumn(); // Institución
-                                    columns.RelativeColumn(); // Fecha
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
+                                    columns.RelativeColumn();
                                 });
 
                                 tabla.Header(header =>
@@ -212,7 +130,7 @@ namespace ProyectoNominas.API.Services
                                     header.Cell().Element(CellEstilo).Text("Fecha de graduación");
                                 });
 
-                                foreach (var est in empleado.Estudios)
+                                foreach (var est in estudios)
                                 {
                                     tabla.Cell().Element(CellEstilo).Text(est.Titulo);
                                     tabla.Cell().Element(CellEstilo).Text(est.Institucion);
@@ -225,28 +143,34 @@ namespace ProyectoNominas.API.Services
                             column.Item().Text("No hay historial académico registrado.");
                         }
 
-                        // HISTORIAL DE NÓMINAS
+                        // HISTORIAL DE NÓMINAS (nuevo: por detalle)
                         column.Item().PaddingTop(20).Text("💵 Historial de nóminas").Bold().FontSize(14);
-                        if (empleado.Nominas != null && empleado.Nominas.Any())
+                        if (detallesNomina.Any())
                         {
                             column.Item().Table(tabla =>
                             {
                                 tabla.ColumnsDefinition(columns =>
                                 {
-                                    columns.RelativeColumn(); // Fecha
-                                    columns.RelativeColumn(); // Monto
+                                    columns.RelativeColumn(); // Periodo
+                                    columns.RelativeColumn(); // Fecha inicio
+                                    columns.RelativeColumn(); // Fecha fin
+                                    columns.RelativeColumn(); // Total a pagar
                                 });
 
                                 tabla.Header(header =>
                                 {
-                                    header.Cell().Element(CellEstilo).Text("Fecha de pago");
-                                    header.Cell().Element(CellEstilo).Text("Monto total");
+                                    header.Cell().Element(CellEstilo).Text("Periodo");
+                                    header.Cell().Element(CellEstilo).Text("Fecha Inicio");
+                                    header.Cell().Element(CellEstilo).Text("Fecha Fin");
+                                    header.Cell().Element(CellEstilo).Text("Total pagado");
                                 });
 
-                                foreach (var n in empleado.Nominas)
+                                foreach (var d in detallesNomina)
                                 {
-                                    tabla.Cell().Element(CellEstilo).Text(n.FechaPago.ToShortDateString());
-                                    tabla.Cell().Element(CellEstilo).Text($"Q{n.MontoTotal:N2}");
+                                    tabla.Cell().Element(CellEstilo).Text(d.Nomina?.Periodo ?? "");
+                                    tabla.Cell().Element(CellEstilo).Text(d.Nomina?.FechaInicio.ToShortDateString() ?? "");
+                                    tabla.Cell().Element(CellEstilo).Text(d.Nomina?.FechaFin.ToShortDateString() ?? "");
+                                    tabla.Cell().Element(CellEstilo).Text($"Q{d.TotalPagar:N2}");
                                 }
                             });
                         }
@@ -261,7 +185,93 @@ namespace ProyectoNominas.API.Services
             return documento.GeneratePdf();
         }
 
-        // 🔧 Método reutilizable para estilo de celdas (fuera de todos los métodos)
+        // Reporte de descuentos por DPI (usando DetalleDescuentoNomina y DescuentoLegal)
+        public byte[] GenerarReporteDescuentosPorDpi(List<DetalleDescuentoNomina> detalles, string dpi)
+        {
+            var documento = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(30);
+
+                    page.Header().Text($"Descuentos por DPI: {dpi}")
+                        .FontSize(18).Bold().AlignCenter();
+
+                    page.Content().Table(tabla =>
+                    {
+                        tabla.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                        });
+
+                        tabla.Header(header =>
+                        {
+                            header.Cell().Element(CellEstilo).Text("Empleado");
+                            header.Cell().Element(CellEstilo).Text("Descuento");
+                            header.Cell().Element(CellEstilo).Text("Monto");
+                        });
+
+                        foreach (var d in detalles)
+                        {
+                            var detalleEmpleado = d.Nomina?.Detalles?.FirstOrDefault(x => x.EmpleadoId == d.NominaId)?.Empleado;
+                            tabla.Cell().Element(CellEstilo).Text($"{detalleEmpleado?.Nombre ?? "N/A"} {detalleEmpleado?.Apellido ?? ""}");
+                            tabla.Cell().Element(CellEstilo).Text(d.DescuentoLegal?.Nombre ?? "N/A");
+                            tabla.Cell().Element(CellEstilo).Text($"Q{d.Monto:N2}");
+                        }
+                    });
+                });
+            });
+
+            return documento.GeneratePdf();
+        }
+
+        // Reporte de nóminas por periodo (detallando empleados)
+        public byte[] GenerarReporteNominasPorPeriodo(List<Nomina> nominas, DateTime inicio, DateTime fin)
+        {
+            var documento = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Margin(30);
+                    page.Header().Text($"Nómina del {inicio:dd/MM/yyyy} al {fin:dd/MM/yyyy}").FontSize(18).Bold().AlignCenter();
+
+                    page.Content().Table(tabla =>
+                    {
+                        tabla.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                        });
+
+                        tabla.Header(header =>
+                        {
+                            header.Cell().Element(CellEstilo).Text("Empleado");
+                            header.Cell().Element(CellEstilo).Text("Periodo");
+                            header.Cell().Element(CellEstilo).Text("Rango Fechas");
+                            header.Cell().Element(CellEstilo).Text("Total Pagado");
+                        });
+
+                        foreach (var nomina in nominas)
+                        {
+                            foreach (var detalle in nomina.Detalles)
+                            {
+                                tabla.Cell().Element(CellEstilo).Text($"{detalle.Empleado?.Nombre} {detalle.Empleado?.Apellido}");
+                                tabla.Cell().Element(CellEstilo).Text(nomina.Periodo);
+                                tabla.Cell().Element(CellEstilo).Text($"{nomina.FechaInicio:dd/MM/yyyy} - {nomina.FechaFin:dd/MM/yyyy}");
+                                tabla.Cell().Element(CellEstilo).Text($"Q{detalle.TotalPagar:N2}");
+                            }
+                        }
+                    });
+                });
+            });
+
+            return documento.GeneratePdf();
+        }
+
         private IContainer CellEstilo(IContainer container)
         {
             return container

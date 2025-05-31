@@ -2,51 +2,101 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 
+<button class="btn btn-link p-0 mb-2" @onclick="VolverAtras" style="color:#202641;">
+    <i class="bi bi-arrow-left-circle" style="font-size:1.7rem;"></i>
+</button>
+
 <h3>📄 Reportes PDF</h3>
 
-<div class="d-grid gap-2">
-    <button class="btn btn-primary" @onclick="DescargarNomina">📄 Nómina por período</button>
-    <button class="btn btn-secondary" @onclick="DescargarEmpleados">👤 Empleados por estado</button>
-    <button class="btn btn-success" @onclick="DescargarDescuentos">💸 Descuentos aplicados</button>
-    <button class="btn btn-info" @onclick="DescargarExpediente">📁 Expediente del empleado</button>
+<div>
+    <label>Estado:</label>
+    <input @bind="estado" placeholder="Ingrese estado (ej: Activo)" />
+    <button @onclick="DescargarEmpleadosPorEstado">Descargar Empleados</button>
+</div>
+
+<div>
+    <label>DPI:</label>
+    <input @bind="dpi" placeholder="Ingrese DPI" />
+    <button @onclick="DescargarDescuentosPorDpi">Descargar Descuentos</button>
+</div>
+<div>
+    <label>Fecha inicio:</label>
+    <input type="date" @bind="fechaInicio" />
+    <label>Fecha fin:</label>
+    <input type="date" @bind="fechaFin" />
+    <button @onclick="DescargarNominaPorPeriodo">Descargar Nómina por Período</button>
+</div>
+<div>
+    <label>DPI:</label>
+    <input @bind="dpiBusquedaExpediente" placeholder="Ingrese DPI" />
+    <button @onclick="DescargarExpedientePorDpi">Descargar Expediente por DPI</button>
 </div>
 
 @code {
-    private async Task DescargarNomina()
-    {
-        var url = "api/Reporte/pdf?inicio=2025-05-01&fin=2025-05-31";
-        await DescargarArchivo(url, "reporte_nomina.pdf");
-    }
 
-    private async Task DescargarEmpleados()
-    {
-        var url = "api/Reporte/empleados?estado=Activo";
-        await DescargarArchivo(url, "reporte_empleados.pdf");
-    }
-
-    private async Task DescargarDescuentos()
-    {
-        var url = "api/Reporte/descuentos?nominaId=1";
-        await DescargarArchivo(url, "reporte_descuentos.pdf");
-    }
-
-    private async Task DescargarExpediente()
-    {
-        var url = "api/Reporte/expediente?empleadoId=2";
-        await DescargarArchivo(url, "expediente_empleado.pdf");
-    }
-
-    private async Task DescargarArchivo(string url, string nombreArchivo)
-    {
-        try
+        async Task VolverAtras()
         {
-            var bytes = await Http.GetByteArrayAsync(url);
-            var base64 = Convert.ToBase64String(bytes);
-            await JS.InvokeVoidAsync("descargarPDF", base64, nombreArchivo);
+            await JS.InvokeVoidAsync("history.back");
         }
-        catch (Exception ex)
+    private DateTime? fechaInicio;
+    private DateTime? fechaFin;
+
+    private string estado;
+    private string dpi;
+
+    private string dpiBusquedaExpediente;
+
+    private async Task DescargarExpedientePorDpi()
+    {
+        if (string.IsNullOrWhiteSpace(dpiBusquedaExpediente))
         {
-            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "Ingrese un DPI válido.");
+            return;
         }
+        var url = $"api/Reporte/expediente-dpi?dpi={dpiBusquedaExpediente}";
+        var bytes = await Http.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("descargarPDF", base64, $"expediente_{dpiBusquedaExpediente}.pdf");
+    }
+
+    private async Task DescargarNominaPorPeriodo()
+    {
+        if (fechaInicio is null || fechaFin is null)
+        {
+            await JS.InvokeVoidAsync("alert", "Seleccione ambas fechas.");
+            return;
+        }
+        var url = $"api/Reporte/nomina-por-periodo?inicio={fechaInicio:yyyy-MM-dd}&fin={fechaFin:yyyy-MM-dd}";
+        var bytes = await Http.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("descargarPDF", base64, $"reporte_nominas_{fechaInicio:yyyyMMdd}_{fechaFin:yyyyMMdd}.pdf");
+    }
+
+    private async Task DescargarEmpleadosPorEstado()
+    {
+        if (string.IsNullOrWhiteSpace(estado))
+        {
+            await JS.InvokeVoidAsync("alert", "Ingrese un estado de empleado");
+            return;
+        }
+
+        var url = $"api/Reporte/empleados?estado={estado}";
+        var bytes = await Http.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("descargarPDF", base64, $"reporte_empleados_{estado}.pdf");
+    }
+
+    private async Task DescargarDescuentosPorDpi()
+    {
+        if (string.IsNullOrWhiteSpace(dpi))
+        {
+            await JS.InvokeVoidAsync("alert", "Ingrese un DPI");
+            return;
+        }
+
+        var url = $"api/Reporte/descuentos-dpi?dpi={dpi}";
+        var bytes = await Http.GetByteArrayAsync(url);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("descargarPDF", base64, $"reporte_descuentos_{dpi}.pdf");
     }
 }

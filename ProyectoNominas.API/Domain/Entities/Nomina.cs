@@ -1,18 +1,9 @@
-﻿using System;
-
-namespace ProyectoNominas.API.Domain.Entities
+﻿public class Nomina
 {
-    public class Nomina
-    {
-        public int Id { get; set; }
-        public DateTime FechaPago { get; set; }
-        public decimal MontoTotal { get; set; }
-
-        public int EmpleadoId { get; set; }
-        public Empleado? Empleado { get; set; }
-
-        // ✅ Agrega esta propiedad si no la tienes:
-        public ICollection<DetalleDescuentoNomina>? DetallesDescuento { get; set; }
-    }
-
+    public int Id { get; set; }
+    public DateTime FechaInicio { get; set; }
+    public DateTime FechaFin { get; set; }
+    public string Periodo { get; set; } = ""; // Ejemplo: "2025-05-Q1"
+    public decimal MontoTotal { get; set; }
+    public ICollection<DetalleNomina> Detalles { get; set; } = new List<DetalleNomina>();
 }

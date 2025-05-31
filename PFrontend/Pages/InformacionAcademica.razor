@@ -1,0 +1,84 @@
+﻿@page "/informacion-academica/{EmpleadoId:int}"
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<h3>Información académica del empleado @EmpleadoId</h3>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Título</th>
+            <th>Institución</th>
+            <th>Fecha de graduación</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var info in informaciones)
+        {
+            <tr>
+                <td>@info.Titulo</td>
+                <td>@info.Institucion</td>
+                <td>@info.FechaGraduacion.ToShortDateString()</td>
+                <td>
+                    <button @onclick="@(() => Eliminar(info.Id))">Eliminar</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h4>Agregar nueva información académica</h4>
+<input placeholder="Título" @bind="nueva.Titulo" />
+<input placeholder="Institución" @bind="nueva.Institucion" />
+<input type="date" @bind="nueva.FechaGraduacion" />
+
+<button @onclick="Agregar">Agregar</button>
+
+@code {
+    [Parameter]
+    public int EmpleadoId { get; set; }
+
+    private List<InformacionAcademicaDto> informaciones = new();
+    private CrearInformacionAcademicaDto nueva = new() { EmpleadoId = 0 };
+
+    protected override async Task OnInitializedAsync()
+    {
+        nueva.EmpleadoId = EmpleadoId;
+        await CargarInformaciones();
+    }
+
+    private async Task CargarInformaciones()
+    {
+        informaciones = await Http.GetFromJsonAsync<List<InformacionAcademicaDto>>($"api/InformacionAcademica/empleado/{EmpleadoId}");
+    }
+
+    private async Task Agregar()
+    {
+        await Http.PostAsJsonAsync("api/InformacionAcademica", nueva);
+        nueva = new() { EmpleadoId = EmpleadoId };
+        await CargarInformaciones();
+    }
+
+    private async Task Eliminar(int id)
+    {
+        await Http.DeleteAsync($"api/InformacionAcademica/{id}");
+        await CargarInformaciones();
+    }
+
+    public class InformacionAcademicaDto
+    {
+        public int Id { get; set; }
+        public string Titulo { get; set; }
+        public string Institucion { get; set; }
+        public DateTime FechaGraduacion { get; set; }
+        public int EmpleadoId { get; set; }
+    }
+    public class CrearInformacionAcademicaDto
+    {
+        public string Titulo { get; set; }
+        public string Institucion { get; set; }
+        public DateTime FechaGraduacion { get; set; }
+        public int EmpleadoId { get; set; }
+    }
+}

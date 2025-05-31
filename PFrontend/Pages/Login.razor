@@ -1,0 +1,171 @@
+﻿@page "/"
+@page "/login"
+@using PFrontend.Services
+@using PFrontend.Models
+@inject AuthService AuthService
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Components.Forms
+
+<style>
+    .login-bg-custom {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #F5F6FA 0%, #E8EAF6 100%);
+    }
+
+    .login-card-custom {
+        background: #FFFFFF;
+        border: 2px solid #1A237E;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 24px rgba(26,35,126,0.08);
+    }
+
+    .login-title-custom {
+        color: #1A237E;
+    }
+
+    .login-btn-custom {
+        background-color: #3949AB;
+        border: none;
+        color: #fff;
+        font-weight: 600;
+        transition: background .2s;
+    }
+
+        .login-btn-custom:active,
+        .login-btn-custom:hover {
+            background-color: #1A237E;
+            color: #FFB300;
+        }
+
+    .input-group-text-custom {
+        background: #F5F6FA;
+        color: #3949AB;
+        border: none;
+    }
+
+    .login-link-custom {
+        color: #3949AB;
+        text-decoration: underline;
+    }
+
+        .login-link-custom:hover {
+            color: #FFB300;
+        }
+
+    .login-icon-custom {
+        font-size: 3rem;
+        color: #3949AB;
+    }
+
+    .alert-custom {
+        background: #FFF3CD;
+        color: #856404;
+        border: 1px solid #FFECB3;
+    }
+</style>
+
+<div class="d-flex justify-content-center align-items-center login-bg-custom">
+    <div class="card login-card-custom shadow rounded-4" style="min-width: 350px; max-width: 400px;">
+        <div class="card-body p-4">
+            <div class="text-center mb-4">
+                <i class="bi bi-person-circle login-icon-custom"></i>
+                <h3 class="mt-2 mb-0 fw-bold login-title-custom">Iniciar Sesión</h3>
+            </div>
+            <EditForm Model="login" OnValidSubmit="HandleLogin">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="form-group mb-3">
+                    <label class="fw-semibold">Correo</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-custom">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+                        <InputText class="form-control" @bind-Value="login.Correo" required autocomplete="username" />
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="fw-semibold">Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-group-text-custom">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        <InputText class="form-control"
+                                   @bind-Value="login.Contrasena"
+                                   type="@passwordInputType"
+                                   required autocomplete="current-password" />
+                        <button type="button" class="btn btn-outline-secondary" tabindex="-1" @onclick="TogglePasswordVisibility">
+                            <i class="bi @(showPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn login-btn-custom w-100" type="submit" disabled="@loading">
+                    @if (loading)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span class="ms-2">Ingresando...</span>
+                    }
+                    else
+                    {
+                        <span>Ingresar</span>
+                    }
+                </button>
+                @if (!string.IsNullOrEmpty(error))
+                {
+                    <div class="alert alert-custom mt-3 text-center" role="alert">
+                        @error
+                    </div>
+                }
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginRequest login = new();
+    private bool loading = false;
+    private string? error;
+
+    // Show/hide password logic
+    private bool showPassword = false;
+    private string passwordInputType => showPassword ? "text" : "password";
+    private void TogglePasswordVisibility() => showPassword = !showPassword;
+
+    private async Task HandleLogin()
+    {
+        loading = true;
+        error = null;
+        var (ok, err) = await AuthService.LoginAsync(login.Correo, login.Contrasena);
+        if (ok)
+        {
+            var user = await AuthService.GetUserAsync();
+            if (user is not null)
+            {
+                var roles = user.Claims.Where(c => c.Type.Contains("role", StringComparison.OrdinalIgnoreCase))
+                                       .Select(c => c.Value)
+                                       .ToList();
+
+                if (roles.Contains("Administrador"))
+                {
+                    Nav.NavigateTo("/inicio");
+                }
+                else if (roles.Contains("Empleado"))
+                {
+                    Nav.NavigateTo("/empleados");
+                }
+                else
+                {
+                    Nav.NavigateTo("/");
+                }
+            }
+            else
+            {
+                error = "No se pudo obtener la información del usuario.";
+            }
+        }
+        else
+        {
+            error = err ?? "Credenciales inválidas";
+        }
+        loading = false;
+    }
+}

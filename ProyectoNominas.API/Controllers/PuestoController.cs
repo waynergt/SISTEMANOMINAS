@@ -37,8 +37,11 @@ namespace ProyectoNominas.API.Controllers
 
         // POST: api/Puesto
         [HttpPost]
-        public async Task<ActionResult<Puesto>> PostPuesto(Puesto puesto)
+        public async Task<ActionResult<Puesto>> PostPuesto([FromBody] Puesto puesto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             _context.Puestos.Add(puesto);
             await _context.SaveChangesAsync();
 
@@ -47,10 +50,13 @@ namespace ProyectoNominas.API.Controllers
 
         // PUT: api/Puesto/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPuesto(int id, Puesto puesto)
+        public async Task<IActionResult> PutPuesto(int id, [FromBody] Puesto puesto)
         {
             if (id != puesto.Id)
                 return BadRequest();
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
             _context.Entry(puesto).State = EntityState.Modified;
 

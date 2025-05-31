@@ -22,6 +22,153 @@ namespace ProyectoNominas.API.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("DetalleNomina", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Bonificaciones")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Comisiones")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("Descuentos")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("EmpleadoId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("HorasExtras")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("IGSS")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("IRTRA")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ISR")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("NominaId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SalarioBase")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalPagar")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmpleadoId");
+
+                    b.HasIndex("NominaId");
+
+                    b.ToTable("DetallesNomina");
+                });
+
+            modelBuilder.Entity("HistorialAjusteNomina", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Concepto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("DetalleNominaId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaAjuste")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Motivo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UsuarioAjuste")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("ValorAnterior")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ValorNuevo")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DetalleNominaId");
+
+                    b.ToTable("HistorialAjustesNomina");
+                });
+
+            modelBuilder.Entity("HorasTrabajadas", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmpleadoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("HorasExtras")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("HorasNormales")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmpleadoId");
+
+                    b.ToTable("HorasTrabajadas");
+                });
+
+            modelBuilder.Entity("Nomina", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("EmpleadoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaFin")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaInicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("MontoTotal")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Periodo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmpleadoId");
+
+                    b.ToTable("Nominas");
+                });
+
             modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.ConfiguracionExpediente", b =>
                 {
                     b.Property<int>("Id")
@@ -113,6 +260,9 @@ namespace ProyectoNominas.API.Migrations
                     b.Property<int>("EmpleadoId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("FechaSubida")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("RutaArchivo")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -138,33 +288,39 @@ namespace ProyectoNominas.API.Migrations
 
                     b.Property<string>("Apellido")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Correo")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("DepartamentoId")
                         .HasColumnType("int");
 
                     b.Property<string>("Direccion")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<string>("Dpi")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("EstadoLaboral")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime>("FechaNacimiento")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<int>("PuestoId")
                         .HasColumnType("int");
@@ -174,7 +330,8 @@ namespace ProyectoNominas.API.Migrations
 
                     b.Property<string>("Telefono")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.HasKey("Id");
 
@@ -214,30 +371,6 @@ namespace ProyectoNominas.API.Migrations
                     b.ToTable("InformacionesAcademicas");
                 });
 
-            modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.Nomina", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("EmpleadoId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("FechaPago")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("MontoTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmpleadoId");
-
-                    b.ToTable("Nominas");
-                });
-
             modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.Puesto", b =>
                 {
                     b.Property<int>("Id")
@@ -248,7 +381,8 @@ namespace ProyectoNominas.API.Migrations
 
                     b.Property<string>("Nombre")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -270,6 +404,26 @@ namespace ProyectoNominas.API.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.TipoDocumentoObligatorio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Obligatorio")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("TipoDocumento")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TipoDocumentoObligatorio");
                 });
 
             modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.Usuario", b =>
@@ -315,6 +469,54 @@ namespace ProyectoNominas.API.Migrations
                     b.ToTable("UsuarioRoles");
                 });
 
+            modelBuilder.Entity("DetalleNomina", b =>
+                {
+                    b.HasOne("ProyectoNominas.API.Domain.Entities.Empleado", "Empleado")
+                        .WithMany()
+                        .HasForeignKey("EmpleadoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Nomina", "Nomina")
+                        .WithMany("Detalles")
+                        .HasForeignKey("NominaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Empleado");
+
+                    b.Navigation("Nomina");
+                });
+
+            modelBuilder.Entity("HistorialAjusteNomina", b =>
+                {
+                    b.HasOne("DetalleNomina", "DetalleNomina")
+                        .WithMany("AjustesManuales")
+                        .HasForeignKey("DetalleNominaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DetalleNomina");
+                });
+
+            modelBuilder.Entity("HorasTrabajadas", b =>
+                {
+                    b.HasOne("ProyectoNominas.API.Domain.Entities.Empleado", "Empleado")
+                        .WithMany()
+                        .HasForeignKey("EmpleadoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Empleado");
+                });
+
+            modelBuilder.Entity("Nomina", b =>
+                {
+                    b.HasOne("ProyectoNominas.API.Domain.Entities.Empleado", null)
+                        .WithMany("Nominas")
+                        .HasForeignKey("EmpleadoId");
+                });
+
             modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.DetalleDescuentoNomina", b =>
                 {
                     b.HasOne("ProyectoNominas.API.Domain.Entities.DescuentoLegal", "DescuentoLegal")
@@ -323,7 +525,7 @@ namespace ProyectoNominas.API.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProyectoNominas.API.Domain.Entities.Nomina", "Nomina")
+                    b.HasOne("Nomina", "Nomina")
                         .WithMany()
                         .HasForeignKey("NominaId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -367,18 +569,7 @@ namespace ProyectoNominas.API.Migrations
             modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.InformacionAcademica", b =>
                 {
                     b.HasOne("ProyectoNominas.API.Domain.Entities.Empleado", "Empleado")
-                        .WithMany()
-                        .HasForeignKey("EmpleadoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Empleado");
-                });
-
-            modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.Nomina", b =>
-                {
-                    b.HasOne("ProyectoNominas.API.Domain.Entities.Empleado", "Empleado")
-                        .WithMany()
+                        .WithMany("Estudios")
                         .HasForeignKey("EmpleadoId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -405,6 +596,16 @@ namespace ProyectoNominas.API.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("DetalleNomina", b =>
+                {
+                    b.Navigation("AjustesManuales");
+                });
+
+            modelBuilder.Entity("Nomina", b =>
+                {
+                    b.Navigation("Detalles");
+                });
+
             modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.Departamento", b =>
                 {
                     b.Navigation("Empleados");
@@ -418,6 +619,10 @@ namespace ProyectoNominas.API.Migrations
             modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.Empleado", b =>
                 {
                     b.Navigation("Documentos");
+
+                    b.Navigation("Estudios");
+
+                    b.Navigation("Nominas");
                 });
 
             modelBuilder.Entity("ProyectoNominas.API.Domain.Entities.Puesto", b =>

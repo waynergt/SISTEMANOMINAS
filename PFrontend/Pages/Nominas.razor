@@ -1,0 +1,209 @@
+﻿@page "/nomina"
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<button class="btn btn-link p-0 mb-2" @onclick="VolverAtras" style="color:#202641;">
+    <i class="bi bi-arrow-left-circle" style="font-size:1.7rem;"></i>
+</button>
+
+<h3>Nómina por Periodo</h3>
+
+<button class="btn btn-success mb-3" @onclick="AbrirGenerarNomina">Generar nueva nómina</button>
+
+@if (nominas is null)
+{
+    <p>Cargando nóminas...</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Periodo</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin</th>
+                <th>Monto Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var n in nominas)
+            {
+                <tr>
+                    <td>@n.Periodo</td>
+                    <td>@n.FechaInicio.ToShortDateString()</td>
+                    <td>@n.FechaFin.ToShortDateString()</td>
+                    <td>@n.MontoTotal.ToString("C")</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" @onclick="() => VerDetalle(n.Id)">Ver Detalle</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (mostrarDetalle && nominaDetalle != null)
+{
+    <h4>Detalle de Nómina - @nominaDetalle.Periodo</h4>
+    <button class="btn btn-secondary btn-sm mb-2" @onclick="CerrarDetalle">Cerrar</button>
+    <table class="table table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Empleado</th>
+                <th>Salario Base</th>
+                <th>Horas Extras</th>
+                <th>Bonificaciones</th>
+                <th>Descuentos</th>
+                <th>IGSS</th>
+                <th>IRTRA</th>
+                <th>ISR</th>
+                <th>Total Pagar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in nominaDetalle.Detalles)
+            {
+                <tr>
+                    <td>@(d.Empleado?.Nombre) @(d.Empleado?.Apellido)</td>
+                    <td>@d.SalarioBase.ToString("C")</td>
+                    <td>@d.HorasExtras</td>
+                    <td>@d.Bonificaciones.ToString("C")</td>
+                    <td>@d.Descuentos.ToString("C")</td>
+                    <td>@d.IGSS.ToString("C")</td>
+                    <td>@d.IRTRA.ToString("C")</td>
+                    <td>@d.ISR.ToString("C")</td>
+                    <td class="fw-bold">@d.TotalPagar.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<!-- Modal para generar nómina -->
+@if (mostrarGenerar)
+{
+    <div class="modal fade show d-block" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Generar nueva nómina</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarGenerarNomina"></button>
+                </div>
+                <div class="modal-body">
+                    <label>Fecha Inicio:</label>
+                    <InputDate @bind-Value="nuevaNomina.FechaInicio" class="form-control" />
+                    <label>Fecha Fin:</label>
+                    <InputDate @bind-Value="nuevaNomina.FechaFin" class="form-control" />
+                    <label>Periodo (ej. 2025-05-Q1):</label>
+                    <InputText @bind-Value="nuevaNomina.Periodo" class="form-control" />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" @onclick="GenerarNomina">Generar</button>
+                    <button class="btn btn-secondary" @onclick="CerrarGenerarNomina">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    async Task VolverAtras()
+    {
+        await JS.InvokeVoidAsync("history.back");
+    }
+    private List<NominaDto>? nominas;
+    private NominaDetalleDto? nominaDetalle;
+    private bool mostrarDetalle = false;
+
+    private bool mostrarGenerar = false;
+    private NuevaNominaDto nuevaNomina = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarNominas();
+    }
+
+    async Task CargarNominas()
+    {
+        nominas = await Http.GetFromJsonAsync<List<NominaDto>>("api/Nomina");
+    }
+
+    async Task VerDetalle(int nominaId)
+    {
+        nominaDetalle = await Http.GetFromJsonAsync<NominaDetalleDto>($"api/Nomina/{nominaId}");
+        mostrarDetalle = true;
+    }
+
+    void CerrarDetalle()
+    {
+        mostrarDetalle = false;
+        nominaDetalle = null;
+    }
+
+    void AbrirGenerarNomina()
+    {
+        nuevaNomina = new();
+        mostrarGenerar = true;
+    }
+
+    void CerrarGenerarNomina()
+    {
+        mostrarGenerar = false;
+    }
+
+    async Task GenerarNomina()
+    {
+        var response = await Http.PostAsJsonAsync("api/Nomina/generar", nuevaNomina);
+        if (response.IsSuccessStatusCode)
+        {
+            mostrarGenerar = false;
+            await CargarNominas();
+        }
+        // Puedes agregar manejo de errores si lo deseas
+    }
+
+    // DTOs para el frontend
+    public class NominaDto
+    {
+        public int Id { get; set; }
+        public string Periodo { get; set; } = "";
+        public DateTime FechaInicio { get; set; }
+        public DateTime FechaFin { get; set; }
+        public decimal MontoTotal { get; set; }
+    }
+
+    public class NominaDetalleDto : NominaDto
+    {
+        public List<DetalleNominaDto> Detalles { get; set; } = new();
+    }
+
+    public class DetalleNominaDto
+    {
+        public int Id { get; set; }
+        public EmpleadoDto? Empleado { get; set; }
+        public decimal SalarioBase { get; set; }
+        public decimal HorasExtras { get; set; }
+        public decimal Bonificaciones { get; set; }
+        public decimal Descuentos { get; set; }
+        public decimal IGSS { get; set; }
+        public decimal IRTRA { get; set; }
+        public decimal ISR { get; set; }
+        public decimal TotalPagar { get; set; }
+    }
+
+    public class EmpleadoDto
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Apellido { get; set; } = "";
+    }
+
+    public class NuevaNominaDto
+    {
+        public DateTime FechaInicio { get; set; } = DateTime.Today;
+        public DateTime FechaFin { get; set; } = DateTime.Today;
+        public string Periodo { get; set; } = "";
+    }
+}

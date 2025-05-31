@@ -1,65 +1,130 @@
 ﻿@page "/empleados/agregar"
 @inject HttpClient Http
 @inject NavigationManager Navigation
-@inject IJSRuntime JS
 @using PFrontend.Models
-@using System.Net.Http.Json
-@using Microsoft.AspNetCore.Components.Forms
-@using PFrontend.Models.PFrontend.Models
 
-<h3>➕ Agregar Empleado</h3>
+<h3>Agregar Nuevo Empleado</h3>
 
-<EditForm Model="empleado" OnValidSubmit="GuardarEmpleado">
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-success">@mensaje</div>
+}
+
+<EditForm Model="nuevoEmpleado" OnValidSubmit="GuardarEmpleado">
     <DataAnnotationsValidator />
     <ValidationSummary />
-
     <div class="mb-3">
         <label class="form-label">Nombre</label>
-        <InputText @bind-Value="empleado.Nombre" class="form-control" />
+        <InputText class="form-control" @bind-Value="nuevoEmpleado.Nombre" />
     </div>
     <div class="mb-3">
         <label class="form-label">Apellido</label>
-        <InputText @bind-Value="empleado.Apellido" class="form-control" />
+        <InputText class="form-control" @bind-Value="nuevoEmpleado.Apellido" />
     </div>
     <div class="mb-3">
         <label class="form-label">DPI</label>
-        <InputText @bind-Value="empleado.Dpi" class="form-control" />
+        <InputText class="form-control" @bind-Value="nuevoEmpleado.Dpi" />
     </div>
     <div class="mb-3">
         <label class="form-label">Correo</label>
-        <InputText @bind-Value="empleado.Correo" class="form-control" />
+        <InputText class="form-control" @bind-Value="nuevoEmpleado.Correo" />
     </div>
     <div class="mb-3">
         <label class="form-label">Salario</label>
-        <InputNumber @bind-Value="empleado.Salario" class="form-control" />
+        <InputNumber class="form-control" @bind-Value="nuevoEmpleado.Salario" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Estado laboral</label>
+        <InputSelect @bind-Value="nuevoEmpleado.EstadoLaboral" class="form-control">
+            <span class="badge bg-success">Activo</span>
+            <span class="badge bg-warning text-dark">Suspendido</span>
+            <span class="badge bg-danger">Retirado</span>
+        </InputSelect>
     </div>
     <div class="mb-3">
         <label class="form-label">Departamento</label>
-        <InputNumber @bind-Value="empleado.DepartamentoId" class="form-control" />
+        <InputSelect @bind-Value="nuevoEmpleado.DepartamentoId" class="form-control">
+            <option value="0">Seleccione departamento</option>
+            @foreach (var dep in departamentos)
+            {
+                <option value="@dep.Id">@dep.Nombre</option>
+            }
+        </InputSelect>
     </div>
     <div class="mb-3">
         <label class="form-label">Puesto</label>
-        <InputNumber @bind-Value="empleado.PuestoId" class="form-control" />
+        <InputSelect @bind-Value="nuevoEmpleado.PuestoId" class="form-control">
+            <option value="0">Seleccione puesto</option>
+            @foreach (var puesto in puestos)
+            {
+                <option value="@puesto.Id">@puesto.Nombre</option>
+            }
+        </InputSelect>
     </div>
-
-    <button type="submit" class="btn btn-primary">Guardar</button>
-    <button class="btn btn-secondary ms-2" @onclick='() => Navigation.NavigateTo("/empleados")'>Cancelar</button>
+    <button type="submit" class="btn btn-success">Guardar</button>
+    <button type="button" class="btn btn-secondary ms-2" @onclick="Volver">Cancelar</button>
 </EditForm>
 
+@if (!string.IsNullOrEmpty(error))
+{
+    <div class="alert alert-danger mt-3">@error</div>
+}
+
+@if (!string.IsNullOrEmpty(jsonDebug))
+{
+    <div class="alert alert-info mt-3">
+        <b>JSON enviado para depuración:</b>
+        <pre>@jsonDebug</pre>
+    </div>
+}
+
 @code {
-    private Empleado empleado = new();
+    private EmpleadoEditModel nuevoEmpleado = new();
+    private List<DepartamentoModelV2> departamentos = new();
+    private List<PuestoModelV2> puestos = new();
+    private string mensaje = "";
+    private string error = "";
+    private string jsonDebug = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            departamentos = await Http.GetFromJsonAsync<List<DepartamentoModelV2>>("https://localhost:7185/api/Departamento") ?? new List<DepartamentoModelV2>();
+            puestos = await Http.GetFromJsonAsync<List<PuestoModelV2>>("https://localhost:7185/api/Puesto") ?? new List<PuestoModelV2>();
+        }
+        catch (Exception ex)
+        {
+            error = $"Error al cargar catálogos: {ex.Message}";
+        }
+    }
 
     private async Task GuardarEmpleado()
     {
-        var response = await Http.PostAsJsonAsync("api/Empleados", empleado);
+        try
+        {
+            jsonDebug = System.Text.Json.JsonSerializer.Serialize(nuevoEmpleado, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
 
-        if (response.IsSuccessStatusCode)
-        {
-            Navigation.NavigateTo("/empleados");
+            var response = await Http.PostAsJsonAsync("https://localhost:7185/api/Empleados", nuevoEmpleado);
+            if (response.IsSuccessStatusCode)
+            {
+                mensaje = "Empleado agregado exitosamente.";
+                await Task.Delay(1000);
+                Navigation.NavigateTo("/empleados");
+            }
+            else
+            {
+                error = "Error al agregar el empleado. Por favor verifica los datos.";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error al guardar: {response.StatusCode}");
+            error = $"Error al agregar el empleado: {ex.Message}";
         }
+    }
+
+    private void Volver()
+    {
+        Navigation.NavigateTo("/empleados");
     }
 }
