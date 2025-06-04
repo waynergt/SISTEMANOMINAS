@@ -71,6 +71,7 @@
                 <i class="bi bi-person-circle login-icon-custom"></i>
                 <h3 class="mt-2 mb-0 fw-bold login-title-custom">Iniciar Sesión</h3>
             </div>
+
             <EditForm Model="login" OnValidSubmit="HandleLogin">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
@@ -116,6 +117,15 @@
                     </div>
                 }
             </EditForm>
+
+            <div class="text-center mt-3">
+                <a @onclick='() => Nav.NavigateTo("/register")'
+                   style="cursor:pointer; font-weight:bold; color:#3949AB; text-decoration:underline;"
+                   onmouseover="this.style.color='#FFB300'"
+                   onmouseout="this.style.color='#3949AB'">
+                    ¿No tienes cuenta? Crear cuenta
+                </a>
+            </div>
         </div>
     </div>
 </div>

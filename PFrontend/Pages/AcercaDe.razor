@@ -1,0 +1,127 @@
+﻿@page "/acercade"
+@inject NavigationManager Navigation
+
+<style>
+    .about-card {
+        max-width: 600px;
+        margin: 3rem auto;
+        padding: 2rem 2.5rem;
+        background: #fff;
+        border-radius: 1.2rem;
+        box-shadow: 0 4px 32px rgba(50, 50, 93, 0.13);
+    }
+
+    .about-title {
+        color: #3949AB;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .about-section {
+        margin-bottom: 1.2rem;
+    }
+
+    .about-label {
+        font-weight: 600;
+        color: #232945;
+    }
+
+    .about-list {
+        margin-left: 1.3rem;
+        margin-bottom: .7rem;
+    }
+
+    .about-footer {
+        color: #888;
+        font-size: 0.96em;
+        text-align: center;
+        margin-top: 2rem;
+    }
+
+    .btn-regresar {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: #3949AB;
+        color: #FFB300;
+        border: none;
+        border-radius: 1.5rem;
+        padding: 0.55rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 1.5rem 0 0 0;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        box-shadow: 0 2px 10px rgba(57,73,171,0.08);
+    }
+
+        .btn-regresar:hover, .btn-regresar:focus {
+            background: #232945;
+            color: #FFB300;
+            text-decoration: none;
+        }
+</style>
+
+<div class="about-card">
+    <div class="about-title">
+        <i class="bi bi-info-circle"></i> Acerca de este Sistema de Nóminas
+    </div>
+    <div class="about-section">
+        <span class="about-label">Propósito:</span>
+        <div>
+            Esta aplicación está diseñada para la gestión eficiente de nóminas en empresas, permitiendo administrar empleados, calcular y consultar pagos, y controlar accesos mediante roles y autenticación segura.
+        </div>
+    </div>
+
+    <div class="about-section">
+        <span class="about-label">Características principales:</span>
+        <ul class="about-list">
+            <li>Registro y autenticación de usuarios con roles (Administrador, Empleado)</li>
+            <li>Alta y gestión de empleados</li>
+            <li>Gestión y cálculo de nóminas</li>
+            <li>Gestión de roles y permisos</li>
+            <li>Interfaz moderna y segura desarrollada en Blazor</li>
+            <li>Seguridad avanzada con JWT y BCrypt</li>
+        </ul>
+    </div>
+
+    <div class="about-section">
+        <span class="about-label">Tecnologías utilizadas:</span>
+        <ul class="about-list">
+            <li>.NET Core / ASP.NET Core</li>
+            <li>Blazor WebAssembly</li>
+            <li>Entity Framework Core</li>
+            <li>SQL Server</li>
+            <li>JWT Authentication</li>
+            <li>BCrypt para hash de contraseñas</li>
+        </ul>
+    </div>
+
+    <div class="about-section">
+        <span class="about-label">Autor:</span>
+        <div>
+            Desarrollado por <b>WaynerGT</b>.<br />
+            Proyecto académico y profesional.<br />
+            Contacto: <a href="mailto:waynergt@email.com">waynergt@email.com</a>
+        </div>
+    </div>
+
+    <div class="about-section">
+        <span class="about-label">Versión actual:</span> v1.0
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <button class="btn-regresar" type="button" @onclick="Regresar">
+            <i class="bi bi-arrow-left"></i> Regresar
+        </button>
+    </div>
+
+    <div class="about-footer">
+        © 2025 Sistema de Nóminas. Todos los derechos reservados.
+    </div>
+</div>
+
+@code {
+    void Regresar() => Navigation.NavigateTo("/");
+}
