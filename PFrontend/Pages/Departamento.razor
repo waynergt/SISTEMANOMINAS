@@ -1,6 +1,7 @@
 ﻿@page "/departamentos"
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <style>
     .departamentos-bg {
@@ -73,6 +74,33 @@
             color: #fff;
         }
 
+    .btn-regresar {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: #3949AB;
+        color: #fff;
+        border: none;
+        border-radius: 1.5rem;
+        padding: 0.55rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0 0 1.4rem 0;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        box-shadow: 0 2px 10px rgba(57,73,171,0.08);
+        position: absolute;
+        left: 1.2rem;
+        top: 1.2rem;
+        z-index: 5;
+    }
+
+        .btn-regresar:hover, .btn-regresar:focus {
+            background: #232945;
+            color: #fff;
+            text-decoration: none;
+        }
+
     .form-label {
         color: #3949AB;
         font-weight: 600;
@@ -94,11 +122,21 @@
         font-size: 1.2rem;
     }
 
+    .btn-regresar {
+        left: .4rem;
+        top: .4rem;
+        font-size: 1.6rem;
+        padding: 0.45rem 1.15rem;
+    }
+
     }
 </style>
 
 <div class="departamentos-bg">
     <div class="departamentos-card">
+        <button class="btn-regresar" type="button" @onclick="Regresar" title="Regresar">
+            <i class="bi bi-arrow-left"></i> Regresar
+        </button>
         <div class="departamentos-title mb-3">
             <i class="bi bi-building icon-person"></i> Departamentos
         </div>
@@ -164,6 +202,11 @@
     DepartamentoModelV2 departamentoActual = new();
     bool mostrarFormulario = false;
     bool esEdicion = false;
+
+    private void Regresar()
+    {
+        Navigation.NavigateTo("/");
+    }
 
     protected override async Task OnInitializedAsync()
     {

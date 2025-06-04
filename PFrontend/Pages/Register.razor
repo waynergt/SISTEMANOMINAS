@@ -16,6 +16,7 @@
         max-width: 400px;
         margin: 4rem auto;
         padding: 2.5rem 2rem;
+        position: relative;
     }
 
     .register-title {
@@ -39,10 +40,40 @@
             background: #232945;
             color: #FFB300;
         }
+
+    .btn-regresar {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: #3949AB;
+        color: #fff;
+        border: none;
+        border-radius: 1.5rem;
+        padding: 0.55rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0 0 1.4rem 0;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        box-shadow: 0 2px 10px rgba(57,73,171,0.08);
+        position: absolute;
+        left: 1.2rem;
+        top: 1.2rem;
+        z-index: 5;
+    }
+
+        .btn-regresar:hover, .btn-regresar:focus {
+            background: #232945;
+            color: #fff;
+            text-decoration: none;
+        }
 </style>
 
 <div class="register-bg">
     <div class="register-card">
+        <button class="btn-regresar" type="button" @onclick="Regresar" title="Regresar">
+            <i class="bi bi-arrow-left"></i> Regresar
+        </button>
         <div class="register-title">Crear Nuevo Usuario</div>
         @if (!string.IsNullOrEmpty(success))
         {
@@ -103,6 +134,11 @@
 
     // Empleado = 2, Administrador = 1 (ajusta estos IDs según tu BD)
     int selectedRolId = 0;
+
+    private void Regresar()
+    {
+        Navigation.NavigateTo("/");
+    }
 
     private async Task HandleRegister()
     {

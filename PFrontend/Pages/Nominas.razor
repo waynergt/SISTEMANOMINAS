@@ -48,20 +48,31 @@
             color: #FFB300;
         }
 
-    .back-btn {
+    .btn-regresar {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: #3949AB;
         color: #fff;
-        background: none;
         border: none;
-        font-size: 2rem;
+        border-radius: 1.5rem;
+        padding: 0.55rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0 0 1.4rem 0;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        box-shadow: 0 2px 10px rgba(57,73,171,0.08);
         position: absolute;
         left: 1.2rem;
         top: 1.2rem;
         z-index: 5;
-        transition: color .2s;
     }
 
-        .back-btn:hover {
-            color: #FFB300;
+        .btn-regresar:hover, .btn-regresar:focus {
+            background: #232945;
+            color: #fff;
+            text-decoration: none;
         }
 
     .table-nominas th, .table-nominas td {
@@ -157,10 +168,11 @@
         max-width: 99vw;
     }
 
-    .back-btn {
+    .btn-regresar {
         left: .4rem;
         top: .4rem;
         font-size: 1.6rem;
+        padding: 0.45rem 1.15rem;
     }
 
     .table-nominas th, .table-nominas td {
@@ -172,8 +184,8 @@
 
 <div class="nomina-bg">
     <div class="nomina-card position-relative">
-        <button class="back-btn" @onclick="VolverAtras" title="Volver">
-            <i class="bi bi-arrow-left-circle"></i>
+        <button class="btn-regresar" @onclick="Regresar" title="Regresar">
+            <i class="bi bi-arrow-left"></i> Regresar
         </button>
         <div class="d-flex flex-column align-items-center mb-2">
             <i class="bi bi-cash-coin" style="font-size:2.4rem;color:#3949AB;background:#F5F6FA;border-radius:50%;padding:.7rem;"></i>
@@ -317,9 +329,9 @@
 </div>
 
 @code {
-    async Task VolverAtras()
+    private void Regresar()
     {
-        await JS.InvokeVoidAsync("history.back");
+        JS.InvokeVoidAsync("history.back");
     }
     private List<NominaDto>? nominas;
     private NominaDetalleDto? nominaDetalle;

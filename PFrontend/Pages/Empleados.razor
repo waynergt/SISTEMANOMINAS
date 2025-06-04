@@ -51,19 +51,30 @@
         background: #232945;
         color: #FFB300;
     }
-    .back-btn {
+    .btn-regresar {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: #3949AB;
         color: #fff;
-        background: none;
         border: none;
-        font-size: 2rem;
+        border-radius: 1.5rem;
+        padding: 0.55rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0 0 1.4rem 0;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        box-shadow: 0 2px 10px rgba(57,73,171,0.08);
         position: absolute;
         left: 1.2rem;
         top: 1.2rem;
         z-index: 5;
-        transition: color .2s;
     }
-    .back-btn:hover {
-        color: #FFB300;
+    .btn-regresar:hover, .btn-regresar:focus {
+        background: #232945;
+        color: #fff;
+        text-decoration: none;
     }
     .table-empleados th, .table-empleados td {
         vertical-align: middle;
@@ -160,10 +171,11 @@
             padding: 1.3rem 0.4rem 1rem 0.4rem;
             max-width: 99vw;
         }
-        .back-btn {
+        .btn-regresar {
             left: .4rem;
             top: .4rem;
             font-size: 1.6rem;
+            padding: 0.45rem 1.15rem;
         }
         .table-empleados th, .table-empleados td {
             font-size: 0.93rem;
@@ -173,8 +185,8 @@
 
 <div class="empleados-bg">
     <div class="empleados-card position-relative">
-        <button class="back-btn" @onclick="VolverAtras" title="Volver">
-            <i class="bi bi-arrow-left-circle"></i>
+        <button class="btn-regresar" @onclick="Regresar" title="Regresar">
+            <i class="bi bi-arrow-left"></i> Regresar
         </button>
         <div class="empleados-title">
             <i class="bi bi-people-fill" style="font-size:2.2rem;color:#3949AB;background:#F5F6FA;border-radius:50%;padding:.5rem;"></i>
@@ -311,10 +323,11 @@
 @code {
     private bool isAuthenticated;
 
-    async Task VolverAtras()
+    private void Regresar()
     {
-        await JS.InvokeVoidAsync("history.back");
+        JS.InvokeVoidAsync("history.back");
     }
+
     private List<Empleado>? empleados;
     private string? error;
 
