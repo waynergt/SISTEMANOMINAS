@@ -1,7 +1,7 @@
-﻿// Frontend - PFrontend/Models/DepartamentoDto.cs
-namespace PFrontend.Models
+﻿// Backend - ProyectoNominas.API/Dtos/DepartamentoDto.cs
+namespace ProyectoNominas.API.Dtos
 {
-    public class DepartamentoModelV2
+    public class DepartamentoDto
     {
         public int Id { get; set; }
         public string Nombre { get; set; }

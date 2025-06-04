@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ProyectoNominas.API.Data;
 using ProyectoNominas.API.Domain.Entities;
+using ProyectoNominas.API.DTO;
 
 namespace ProyectoNominas.API.Controllers
 {
@@ -18,64 +19,80 @@ namespace ProyectoNominas.API.Controllers
 
         // GET: api/Puesto
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Puesto>>> GetPuestos()
+        public async Task<ActionResult<IEnumerable<PuestoDto>>> GetPuestos()
         {
-            return await _context.Puestos.ToListAsync();
+            return await _context.Puestos
+                .Select(p => new PuestoDto
+                {
+                    Id = p.Id,
+                    Nombre = p.Nombre,
+                    Activo = p.Activo
+                })
+                .ToListAsync();
         }
 
-        // GET: api/Puesto/5
+        // GET: api/Puesto/activos
+        [HttpGet("activos")]
+        public async Task<ActionResult<IEnumerable<PuestoDto>>> GetPuestosActivos()
+        {
+            return await _context.Puestos
+                .Where(p => p.Activo)
+                .Select(p => new PuestoDto
+                {
+                    Id = p.Id,
+                    Nombre = p.Nombre,
+                    Activo = p.Activo
+                })
+                .ToListAsync();
+        }
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<Puesto>> GetPuesto(int id)
+        public async Task<ActionResult<PuestoDto>> GetPuesto(int id)
         {
             var puesto = await _context.Puestos.FindAsync(id);
-
             if (puesto == null)
                 return NotFound();
 
-            return puesto;
+            return new PuestoDto
+            {
+                Id = puesto.Id,
+                Nombre = puesto.Nombre,
+                Activo = puesto.Activo
+            };
         }
 
-        // POST: api/Puesto
         [HttpPost]
-        public async Task<ActionResult<Puesto>> PostPuesto([FromBody] Puesto puesto)
+        public async Task<ActionResult<PuestoDto>> PostPuesto(PuestoDto puestoDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
+            var puesto = new Puesto
+            {
+                Nombre = puestoDto.Nombre,
+                Activo = puestoDto.Activo
+            };
             _context.Puestos.Add(puesto);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetPuesto), new { id = puesto.Id }, puesto);
+            puestoDto.Id = puesto.Id;
+            return CreatedAtAction(nameof(GetPuesto), new { id = puesto.Id }, puestoDto);
         }
 
-        // PUT: api/Puesto/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutPuesto(int id, [FromBody] Puesto puesto)
+        public async Task<IActionResult> PutPuesto(int id, PuestoDto puestoDto)
         {
-            if (id != puesto.Id)
+            if (id != puestoDto.Id)
                 return BadRequest();
 
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var puesto = await _context.Puestos.FindAsync(id);
+            if (puesto == null)
+                return NotFound();
 
-            _context.Entry(puesto).State = EntityState.Modified;
+            puesto.Nombre = puestoDto.Nombre;
+            puesto.Activo = puestoDto.Activo;
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!_context.Puestos.Any(p => p.Id == id))
-                    return NotFound();
-                else
-                    throw;
-            }
-
+            await _context.SaveChangesAsync();
             return NoContent();
         }
 
-        // DELETE: api/Puesto/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePuesto(int id)
         {

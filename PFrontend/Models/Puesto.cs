@@ -13,5 +13,6 @@ namespace ProyectoNominas.API.Domain.Entities
 
         [StringLength(250, ErrorMessage = "La descripción no puede tener más de 250 caracteres")]
         public string? Descripcion { get; set; }
+        public bool Activo { get; set; } = true;
     }
 }

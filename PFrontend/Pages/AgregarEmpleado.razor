@@ -194,8 +194,9 @@
     {
         try
         {
-            departamentos = await Http.GetFromJsonAsync<List<DepartamentoModelV2>>("https://localhost:7185/api/Departamento") ?? new List<DepartamentoModelV2>();
-            puestos = await Http.GetFromJsonAsync<List<PuestoModelV2>>("https://localhost:7185/api/Puesto") ?? new List<PuestoModelV2>();
+            departamentos = await Http.GetFromJsonAsync<List<DepartamentoModelV2>>("https://localhost:7185/api/Departamento/activos") ?? new List<DepartamentoModelV2>();
+            // CAMBIA ESTA LÍNEA
+            puestos = await Http.GetFromJsonAsync<List<PuestoModelV2>>("https://localhost:7185/api/Puesto/activos") ?? new List<PuestoModelV2>();
         }
         catch (Exception ex)
         {

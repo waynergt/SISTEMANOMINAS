@@ -1,16 +1,16 @@
-﻿@page "/puestos"
+﻿@page "/departamentos"
 @inject HttpClient Http
 @inject IJSRuntime JS
 
 <style>
-    .puestos-bg {
+    .departamentos-bg {
         min-height: 100vh;
         background: linear-gradient(135deg, #232945 0%, #3949AB 100%);
         padding: 0;
         margin: 0;
     }
 
-    .puestos-card {
+    .departamentos-card {
         background: #fff;
         border-radius: 1.5rem;
         box-shadow: 0 4px 32px rgba(50, 50, 93, 0.13);
@@ -21,7 +21,7 @@
         position: relative;
     }
 
-    .puestos-title {
+    .departamentos-title {
         color: #232945;
         font-weight: 700;
         margin-bottom: 2rem;
@@ -83,26 +83,26 @@
         box-shadow: 0 0 0 2px #3949AB33;
     }
     media (max-width: 575px) {
-        .puestos-card
+        .departamentos-card
 
     {
         padding: 1.3rem 0.4rem 1rem 0.4rem;
         max-width: 99vw;
     }
 
-    .puestos-title {
+    .departamentos-title {
         font-size: 1.2rem;
     }
 
     }
 </style>
 
-<div class="puestos-bg">
-    <div class="puestos-card">
-        <div class="puestos-title mb-3">
-            <i class="bi bi-briefcase-fill icon-person"></i> Puestos
+<div class="departamentos-bg">
+    <div class="departamentos-card">
+        <div class="departamentos-title mb-3">
+            <i class="bi bi-building icon-person"></i> Departamentos
         </div>
-        @if (puestos == null)
+        @if (departamentos == null)
         {
             <div class="d-flex align-items-center justify-content-center py-4">
                 <div class="spinner-border text-primary me-2"></div>
@@ -112,7 +112,7 @@
         else
         {
             <button class="btn-agregar mb-2" @onclick="MostrarAgregar">
-                <i class="bi bi-plus-circle"></i> Agregar Puesto
+                <i class="bi bi-plus-circle"></i> Agregar Departamento
             </button>
             <div class="table-responsive">
                 <table class="table align-middle">
@@ -124,16 +124,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var puesto in puestos)
+                        @foreach (var departamento in departamentos)
                         {
                             <tr>
-                                <td>@puesto.Id</td>
-                                <td>@puesto.Nombre</td>
+                                <td>@departamento.Id</td>
+                                <td>@departamento.Nombre</td>
                                 <td>
-                                    <button class="btn-toggle @(puesto.Activo ? "activo" : "inactivo")"
+                                    <button class="btn-toggle @(departamento.Activo ? "activo" : "inactivo")"
                                             title="Cambiar estado"
-                                            @onclick="() => CambiarEstado(puesto)">
-                                        @(puesto.Activo ? "Activo" : "Inactivo")
+                                            @onclick="() => CambiarEstado(departamento)">
+                                        @(departamento.Activo ? "Activo" : "Inactivo")
                                     </button>
                                 </td>
                             </tr>
@@ -145,12 +145,12 @@
 
         @if (mostrarFormulario)
         {
-            <EditForm Model="puestoActual" OnValidSubmit="GuardarPuesto">
+            <EditForm Model="departamentoActual" OnValidSubmit="GuardarDepartamento">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <div class="mb-2">
                     <label class="form-label">Nombre:</label>
-                    <InputText class="form-control" @bind-Value="puestoActual.Nombre" />
+                    <InputText class="form-control" @bind-Value="departamentoActual.Nombre" />
                 </div>
                 <button class="btn btn-primary" type="submit"><i class="bi bi-save"></i> Guardar</button>
                 <button class="btn btn-secondary ms-2" type="button" @onclick="CerrarFormulario"><i class="bi bi-x-circle"></i> Cancelar</button>
@@ -160,40 +160,40 @@
 </div>
 
 @code {
-    List<PuestoDto>? puestos;
-    PuestoDto puestoActual = new();
+    List<DepartamentoModelV2>? departamentos;
+    DepartamentoModelV2 departamentoActual = new();
     bool mostrarFormulario = false;
     bool esEdicion = false;
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarPuestos();
+        await CargarDepartamentos();
     }
 
-    async Task CargarPuestos()
+    async Task CargarDepartamentos()
     {
-        puestos = await Http.GetFromJsonAsync<List<PuestoDto>>("api/puesto");
+        departamentos = await Http.GetFromJsonAsync<List<DepartamentoModelV2>>("api/departamento");
     }
 
     void MostrarAgregar()
     {
-        puestoActual = new PuestoDto { Activo = true };
+        departamentoActual = new DepartamentoModelV2 { Activo = true };
         esEdicion = false;
         mostrarFormulario = true;
     }
 
-    async Task GuardarPuesto()
+    async Task GuardarDepartamento()
     {
         if (esEdicion)
         {
-            await Http.PutAsJsonAsync($"api/puesto/{puestoActual.Id}", puestoActual);
+            await Http.PutAsJsonAsync($"api/departamento/{departamentoActual.Id}", departamentoActual);
         }
         else
         {
-            await Http.PostAsJsonAsync("api/puesto", puestoActual);
+            await Http.PostAsJsonAsync("api/departamento", departamentoActual);
         }
         mostrarFormulario = false;
-        await CargarPuestos();
+        await CargarDepartamentos();
         StateHasChanged();
     }
 
@@ -202,15 +202,15 @@
         mostrarFormulario = false;
     }
 
-    async Task CambiarEstado(PuestoDto puesto)
+    async Task CambiarEstado(DepartamentoModelV2 departamento)
     {
-        puesto.Activo = !puesto.Activo;
-        await Http.PutAsJsonAsync($"api/puesto/{puesto.Id}", puesto);
-        await CargarPuestos();
+        departamento.Activo = !departamento.Activo;
+        await Http.PutAsJsonAsync($"api/departamento/{departamento.Id}", departamento);
+        await CargarDepartamentos();
         StateHasChanged();
     }
 
-    public class PuestoDto
+    public class DepartamentoModelV2
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
