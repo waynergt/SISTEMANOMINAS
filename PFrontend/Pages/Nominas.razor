@@ -1,6 +1,7 @@
 ﻿@page "/nomina"
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <style>
     .nomina-bg {
@@ -124,7 +125,21 @@
             background: #ffcb46;
             color: #232945;
         }
-    /* Modal */
+
+    .btn-descargar {
+        background: #3949AB;
+        border: none;
+        color: #fff;
+        border-radius: 7px;
+        font-weight: 500;
+        padding: .36rem 1.1rem;
+    }
+
+        .btn-descargar:hover {
+            background: #232945;
+            color: #FFB300;
+        }
+
     .modal-content {
         border-radius: 1.2rem;
         border: 2px solid #3949AB;
@@ -253,45 +268,108 @@
             </nav>
         }
 
+        <!-- MODAL DETALLE NOMINA -->
         @if (mostrarDetalle && nominaDetalle != null)
         {
-            <h4 class="detalle-title">Detalle de Nómina - @nominaDetalle.Periodo</h4>
-            <button class="btn btn-cerrar btn-sm mb-2" @onclick="CerrarDetalle">
-                <i class="bi bi-x-circle"></i> Cerrar
-            </button>
-            <div class="table-responsive">
-                <table class="table table-sm table-striped align-middle">
-                    <thead>
-                        <tr>
-                            <th>Empleado</th>
-                            <th>Salario Base</th>
-                            <th>Horas Extras</th>
-                            <th>Bonificaciones</th>
-                            <th>Descuentos</th>
-                            <th>IGSS</th>
-                            <th>IRTRA</th>
-                            <th>ISR</th>
-                            <th>Total Pagar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var d in nominaDetalle.Detalles)
-                        {
-                            <tr>
-                                <td>@(d.Empleado?.Nombre) @(d.Empleado?.Apellido)</td>
-                                <td>@d.SalarioBase.ToString("C")</td>
-                                <td>@d.HorasExtras</td>
-                                <td>@d.Bonificaciones.ToString("C")</td>
-                                <td>@d.Descuentos.ToString("C")</td>
-                                <td>@d.IGSS.ToString("C")</td>
-                                <td>@d.IRTRA.ToString("C")</td>
-                                <td>@d.ISR.ToString("C")</td>
-                                <td class="fw-bold">@d.TotalPagar.ToString("C")</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+            <div class="modal fade show d-block" tabindex="-1" style="background:rgba(44,49,77,.16);z-index:2000;">
+                <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title">Detalle de Nómina - @nominaDetalle.Periodo</h4>
+                            <button type="button" class="btn-close" @onclick="CerrarDetalle"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3"><b>Fecha inicio:</b> @nominaDetalle.FechaInicio.ToShortDateString() &nbsp; <b>Fecha fin:</b> @nominaDetalle.FechaFin.ToShortDateString()</div>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Empleado</th>
+                                            <th>Salario Base</th>
+                                            <th>Horas Extras</th>
+                                            <th>Bonificaciones</th>
+                                            <th>Descuentos</th>
+                                            <th>IGSS</th>
+                                            <th>IRTRA</th>
+                                            <th>ISR</th>
+                                            <th>Total Pagar</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var d in nominaDetalle.Detalles)
+                                        {
+                                            <tr>
+                                                <td>@(d.Empleado?.Nombre) @(d.Empleado?.Apellido)</td>
+                                                <td>@d.SalarioBase.ToString("C")</td>
+                                                <td>@d.HorasExtras</td>
+                                                <td>@d.Bonificaciones.ToString("C")</td>
+                                                <td>@d.Descuentos.ToString("C")</td>
+                                                <td>@d.IGSS.ToString("C")</td>
+                                                <td>@d.IRTRA.ToString("C")</td>
+                                                <td>@d.ISR.ToString("C")</td>
+                                                <td class="fw-bold">@d.TotalPagar.ToString("C")</td>
+                                                <td>
+                                                    <button class="btn btn-primary btn-sm" @onclick="@(() => VerReciboEmpleado(d))">
+                                                        <i class="bi bi-eye"></i> Ver Recibo
+                                                    </button>
+                                                    <button class="btn btn-descargar btn-sm ms-2" @onclick="@(() => DescargarReciboEmpleado(d))">
+                                                        <i class="bi bi-download"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" @onclick="CerrarDetalle">
+                                <i class="bi bi-x-circle"></i> Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+            <div class="modal-backdrop fade show"></div>
+        }
+
+        <!-- MODAL RECIBO EMPLEADO -->
+        @if (mostrarReciboEmpleado && reciboActual != null)
+        {
+            <div class="modal fade show d-block" tabindex="-1" style="background:rgba(44,49,77,.26);z-index:3000;">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Recibo de Nómina - @reciboActual.Empleado?.Nombre @reciboActual.Empleado?.Apellido</h5>
+                            <button type="button" class="btn-close" @onclick="CerrarReciboEmpleado"></button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table table-bordered">
+                                <tbody>
+                                    <tr><th>Salario Base</th><td>@reciboActual.SalarioBase.ToString("C")</td></tr>
+                                    <tr><th>Horas Extras</th><td>@reciboActual.HorasExtras</td></tr>
+                                    <tr><th>Bonificaciones</th><td>@reciboActual.Bonificaciones.ToString("C")</td></tr>
+                                    <tr><th>Descuentos</th><td>@reciboActual.Descuentos.ToString("C")</td></tr>
+                                    <tr><th>IGSS</th><td>@reciboActual.IGSS.ToString("C")</td></tr>
+                                    <tr><th>IRTRA</th><td>@reciboActual.IRTRA.ToString("C")</td></tr>
+                                    <tr><th>ISR</th><td>@reciboActual.ISR.ToString("C")</td></tr>
+                                    <tr class="fw-bold"><th>Total a Pagar</th><td>@reciboActual.TotalPagar.ToString("C")</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" @onclick="CerrarReciboEmpleado">
+                                <i class="bi bi-x-circle"></i> Cerrar
+                            </button>
+                            <button class="btn btn-descargar" @onclick="() => DescargarReciboEmpleado(reciboActual)">
+                                <i class="bi bi-download"></i> Descargar Recibo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-backdrop fade show"></div>
         }
 
         <!-- Modal para generar nómina -->
@@ -329,10 +407,8 @@
 </div>
 
 @code {
-    private void Regresar()
-    {
-        JS.InvokeVoidAsync("history.back");
-    }
+    private void Regresar() => Navigation.NavigateTo("/");
+
     private List<NominaDto>? nominas;
     private NominaDetalleDto? nominaDetalle;
     private bool mostrarDetalle = false;
@@ -340,9 +416,13 @@
     private bool mostrarGenerar = false;
     private NuevaNominaDto nuevaNomina = new();
 
+    // Para Recibo por Empleado
+    private DetalleNominaDto? reciboActual;
+    private bool mostrarReciboEmpleado = false;
+
     // PAGINACIÓN
     private int currentPage = 1;
-    private int pageSize = 5; // Número de filas por página
+    private int pageSize = 5;
     private int totalPages => nominas == null ? 1 : (int)Math.Ceiling((double)nominas.Count / pageSize);
 
     private IEnumerable<NominaDto> PaginatedNominas =>
@@ -355,15 +435,11 @@
         currentPage = page;
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarNominas();
-    }
+    protected override async Task OnInitializedAsync() => await CargarNominas();
 
     async Task CargarNominas()
     {
         nominas = await Http.GetFromJsonAsync<List<NominaDto>>("api/Nomina");
-        // Si has borrado la última nómina de la página y ya no hay, regresa una página atrás.
         if (currentPage > totalPages)
             currentPage = totalPages;
         StateHasChanged();
@@ -400,10 +476,30 @@
             mostrarGenerar = false;
             await CargarNominas();
         }
-        // Puedes agregar manejo de errores si lo deseas
     }
 
-    // DTOs para el frontend
+    // --------- RECIBO EMPLEADO ---------
+    void VerReciboEmpleado(DetalleNominaDto dto)
+    {
+        reciboActual = dto;
+        mostrarReciboEmpleado = true;
+    }
+
+    void CerrarReciboEmpleado()
+    {
+        mostrarReciboEmpleado = false;
+        reciboActual = null;
+    }
+
+    // Simulado: descarga recibo PDF individual (debes implementar en backend y ajustar aquí si deseas)
+    async Task DescargarReciboEmpleado(DetalleNominaDto dto)
+    {
+        // Supón que tienes un endpoint: api/Nomina/recibo-pdf?nominaId={id}&empleadoId={id}
+        var url = $"https://localhost:7185/api/Nomina/recibo-pdf?nominaId={nominaDetalle?.Id}&empleadoId={dto.Empleado?.Id}";
+        await JS.InvokeVoidAsync("open", url, "_blank");
+    }
+
+    // --------- MODELOS ---------
     public class NominaDto
     {
         public int Id { get; set; }

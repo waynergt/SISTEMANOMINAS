@@ -106,5 +106,10 @@ namespace ProyectoNominas.API.Services
                 .OrderByDescending(n => n.FechaInicio)
                 .ToListAsync();
         }
+
+        internal async Task ObtenerNominaDetalleAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
