@@ -111,5 +111,10 @@ namespace ProyectoNominas.API.Services
         {
             throw new NotImplementedException();
         }
+
+        internal async Task SimularNominaAsync(DateTime fechaInicio, DateTime fechaFin, string periodo)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

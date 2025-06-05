@@ -407,7 +407,7 @@
 </div>
 
 @code {
-    private void Regresar() => Navigation.NavigateTo("/");
+    private void Regresar() => Navigation.NavigateTo("/inicio");
 
     private List<NominaDto>? nominas;
     private NominaDetalleDto? nominaDetalle;
@@ -466,15 +466,38 @@
     void CerrarGenerarNomina()
     {
         mostrarGenerar = false;
+
     }
+    bool isLoading = false;
+    string? errorMsg = null;
 
     async Task GenerarNomina()
     {
+        errorMsg = null;
+        if (nuevaNomina.FechaInicio > nuevaNomina.FechaFin)
+        {
+            errorMsg = "La fecha de inicio debe ser anterior o igual a la fecha fin.";
+            return;
+        }
+        if (string.IsNullOrWhiteSpace(nuevaNomina.Periodo))
+        {
+            errorMsg = "El periodo no puede estar vacío.";
+            return;
+        }
+        isLoading = true;
+        StateHasChanged();
+
         var response = await Http.PostAsJsonAsync("api/Nomina/generar", nuevaNomina);
+        isLoading = false;
         if (response.IsSuccessStatusCode)
         {
             mostrarGenerar = false;
             await CargarNominas();
+            await JS.InvokeVoidAsync("alert", "¡Nómina generada con éxito!");
+        }
+        else
+        {
+            errorMsg = "Error generando nómina: " + await response.Content.ReadAsStringAsync();
         }
     }
 

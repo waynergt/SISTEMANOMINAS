@@ -25,7 +25,16 @@ namespace ProyectoNominas.API.Controllers
             var nomina = await _service.GenerarNominaAsync(request.FechaInicio, request.FechaFin, request.Periodo);
             return Ok(nomina);
         }
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Nomina>> GetNomina(int id)
+        {
+            var nomina = await _service.ObtenerNominaPorIdAsync(id);
 
+            if (nomina == null)
+                return NotFound();
+
+            return Ok(nomina);
+        }
 
         // GET: api/Nomina
         [HttpGet]
@@ -82,19 +91,16 @@ namespace ProyectoNominas.API.Controllers
                     page.Margin(30);
                     page.DefaultTextStyle(x => x.FontSize(12).FontFamily("Arial"));
 
-                    // HEADER
-                    page.Header().Element(header =>
-                    {
-                        header.Row(r =>
+                    // HEADER (corregido)
+                    page.Header()
+                        .PaddingBottom(10)
+                        .Row(r =>
                         {
                             r.RelativeItem().Text($"Recibo de Nómina - {model.NombreEmpleado}")
                                 .FontColor("#233a7b").SemiBold().FontSize(18);
                         });
-                        // Espacio debajo del header:
-                        header.PaddingBottom(10);
-                    });
 
-                    // CONTENT
+                    // CONTENT (igual que antes)
                     page.Content().Element(c =>
                     {
                         c.Table(table =>
@@ -135,16 +141,14 @@ namespace ProyectoNominas.API.Controllers
                         });
                     });
 
-                    // FOOTER
-                    page.Footer().Element(footer =>
-                    {
-                        footer.AlignRight().Text(t =>
-                        {
-                            t.Span("Generado el ");
-                            t.Span(DateTime.Now.ToString("dd/MM/yyyy")).SemiBold().FontSize(10).FontColor("#666");
-                        });
-                        // Espacio encima del footer (opcional)
-                        footer.PaddingTop(20);
+                    // FOOTER (igual que antes)
+page.Footer()
+    .PaddingTop(20)
+    .AlignRight()
+    .Text(t =>
+    {
+        t.Span("Generado el ");
+        t.Span(DateTime.Now.ToString("dd/MM/yyyy")).SemiBold().FontSize(10).FontColor("#666");
                     });
                 });
             }).GeneratePdf();
