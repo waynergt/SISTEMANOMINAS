@@ -244,7 +244,7 @@
     {
         try
         {
-            jsonDebug = System.Text.Json.JsonSerializer.Serialize(nuevoEmpleado, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            
 
             var response = await Http.PostAsJsonAsync("https://localhost:7185/api/Empleados", nuevoEmpleado);
             if (response.IsSuccessStatusCode)
@@ -266,6 +266,6 @@
 
     private void Volver()
     {
-        Navigation.NavigateTo("/empleados");
+        Navigation.NavigateTo("/empleados"); // Siempre regresa a la lista, NO history.back
     }
 }

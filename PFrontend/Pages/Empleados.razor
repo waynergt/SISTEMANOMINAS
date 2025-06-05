@@ -185,6 +185,7 @@
 
 <div class="empleados-bg">
     <div class="empleados-card position-relative">
+        <!-- Si quieres regresar al dashboard o inicio, cámbialo aquí -->
         <button class="btn-regresar" @onclick="Regresar" title="Regresar">
             <i class="bi bi-arrow-left"></i> Regresar
         </button>
@@ -323,9 +324,10 @@
 @code {
     private bool isAuthenticated;
 
+    // Cambia este método para regresar al dashboard o donde desees
     private void Regresar()
     {
-        JS.InvokeVoidAsync("history.back");
+        Navigation.NavigateTo("/inicio"); // Cambia aquí si quieres otro destino
     }
 
     private List<Empleado>? empleados;
