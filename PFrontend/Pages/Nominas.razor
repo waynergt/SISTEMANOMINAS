@@ -382,7 +382,16 @@
                             <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Generar nueva nómina</h5>
                             <button type="button" class="btn-close" @onclick="CerrarGenerarNomina"></button>
                         </div>
+ 
                         <div class="modal-body">
+                            <label>Empleado (opcional):</label>
+                            <InputSelect @bind-Value="nuevaNomina.EmpleadoId" class="form-control mb-2">
+                                <option value="">Todos los empleados</option>
+                                @foreach (var emp in empleados)
+                                {
+                                    <option value="@emp.Id">@emp.Nombre @emp.Apellido</option>
+                                }
+                            </InputSelect>
                             <label class="fw-semibold">Fecha Inicio:</label>
                             <InputDate @bind-Value="nuevaNomina.FechaInicio" class="form-control mb-2" />
                             <label class="fw-semibold">Fecha Fin:</label>
@@ -407,7 +416,16 @@
 </div>
 
 @code {
+
+
     private void Regresar() => Navigation.NavigateTo("/inicio");
+
+    private List<EmpleadoDto> empleados = new();
+
+    private async Task CargarEmpleados()
+    {
+        empleados = await Http.GetFromJsonAsync<List<EmpleadoDto>>("https://localhost:7185/api/Empleados");
+    }
 
     private List<NominaDto>? nominas;
     private NominaDetalleDto? nominaDetalle;
@@ -435,7 +453,12 @@
         currentPage = page;
     }
 
-    protected override async Task OnInitializedAsync() => await CargarNominas();
+   
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarEmpleados();
+        await CargarNominas();
+    }
 
     async Task CargarNominas()
     {
@@ -563,5 +586,6 @@
         public DateTime FechaInicio { get; set; } = DateTime.Today;
         public DateTime FechaFin { get; set; } = DateTime.Today;
         public string Periodo { get; set; } = "";
+        public int? EmpleadoId { get; set; } // ← nuevo
     }
 }

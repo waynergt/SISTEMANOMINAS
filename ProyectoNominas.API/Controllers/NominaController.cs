@@ -4,6 +4,7 @@ using ProyectoNominas.API.Domain.Entities;
 using QuestPDF.Fluent;
 using System.Globalization;
 using QuestPDF.Helpers;
+using ProyectoNominas.API.DTOs;
 
 namespace ProyectoNominas.API.Controllers
 {
@@ -22,7 +23,12 @@ namespace ProyectoNominas.API.Controllers
         [HttpPost("generar")]
         public async Task<ActionResult<Nomina>> GenerarNomina([FromBody] GenerarNominaRequest request)
         {
-            var nomina = await _service.GenerarNominaAsync(request.FechaInicio, request.FechaFin, request.Periodo);
+            var nomina = await _service.GenerarNominaAsync(
+                request.FechaInicio,
+                request.FechaFin,
+                request.Periodo,
+                request.EmpleadoId // << nuevo parámetro
+            );
             return Ok(nomina);
         }
         [HttpGet("{id}")]
@@ -163,11 +169,6 @@ page.Footer()
         }
 
 
-        public class GenerarNominaRequest
-        {
-            public DateTime FechaInicio { get; set; }
-            public DateTime FechaFin { get; set; }
-            public string Periodo { get; set; } = "";
-        }
+       
     }
 }
