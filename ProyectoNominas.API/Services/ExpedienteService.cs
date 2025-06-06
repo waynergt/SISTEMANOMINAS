@@ -32,28 +32,39 @@ namespace ProyectoNominas.API.Services
 
         public async Task<DocumentoExpedienteDto?> SubirDocumento(CrearDocumentoExpedienteDto dto)
         {
-            var uploads = Path.Combine(_env.WebRootPath, "uploads");
-            Directory.CreateDirectory(uploads);
+            if (dto.Archivo == null || dto.Archivo.Length == 0)
+                return null;
 
-            var fileName = $"{Guid.NewGuid()}_{dto.Archivo.FileName}";
-            var filePath = Path.Combine(uploads, fileName);
+            // Carpeta donde guardar archivos
+            var uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads", "expediente");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
 
+            // Nombre único
+            var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(dto.Archivo.FileName)}";
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            // Guardar archivo físicamente
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await dto.Archivo.CopyToAsync(stream);
             }
 
+            // Ruta relativa para que el frontend la pueda consumir
+            var rutaRelativa = $"/uploads/expediente/{fileName}";
+
+            // Guardar en base de datos
             var doc = new DocumentoEmpleado
             {
                 EmpleadoId = dto.EmpleadoId,
                 TipoDocumento = dto.TipoDocumento,
-                RutaArchivo = $"/uploads/{fileName}",
+                RutaArchivo = rutaRelativa,
                 FechaSubida = DateTime.Now
             };
-
             _context.DocumentosEmpleado.Add(doc);
             await _context.SaveChangesAsync();
 
+            // Retornar DTO para mostrar en frontend
             return new DocumentoExpedienteDto
             {
                 Id = doc.Id,

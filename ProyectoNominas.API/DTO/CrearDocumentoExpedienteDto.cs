@@ -7,5 +7,6 @@ namespace ProyectoNominas.API.DTOs
         public int EmpleadoId { get; set; }
         public string TipoDocumento { get; set; } = string.Empty;
         public IFormFile Archivo { get; set; } = null!;
+      
     }
 }

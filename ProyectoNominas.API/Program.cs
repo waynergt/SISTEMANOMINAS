@@ -32,6 +32,8 @@ namespace ProyectoNominas.API
                 });
             });
 
+
+
             // Otros servicios
             builder.Services.AddControllers()
             .AddJsonOptions(options =>
@@ -59,6 +61,8 @@ namespace ProyectoNominas.API
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
                 };
             });
+
+
 
             var app = builder.Build();
 
