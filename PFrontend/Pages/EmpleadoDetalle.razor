@@ -262,11 +262,12 @@
                             </td>
                             <td>@doc.FechaSubida.ToShortDateString()</td>
                             <td>
-                                <button class="btn btn-outline-primary btn-sm" @onclick="@(() => VerDocumento(doc.RutaArchivo))">Ver</button>
+                                <a class="btn btn-outline-primary btn-sm" href="@doc.RutaArchivo" target="_blank">Ver</a>
                                 <a class="btn btn-outline-secondary btn-sm ms-1" href="@doc.RutaArchivo" download>Descargar</a>
                                 <button class="btn btn-warning btn-sm ms-1" @onclick="() => EditarDocumento(doc)">Editar</button>
                                 <button class="btn btn-danger btn-sm ms-1" @onclick="() => EliminarDocumento(doc.Id)">Eliminar</button>
                             </td>
+
                         </tr>
                     }
                 </tbody>
@@ -314,14 +315,7 @@
     private NuevoDocumentoModel nuevoDocumento = new();
     private IBrowserFile? archivoSeleccionado;
 
-    private async Task VerDocumento(string rutaArchivo)
-    {
-        await JS.InvokeVoidAsync("open", rutaArchivo, "_blank");
-    }
-    private async Task DescargarDocumento(string rutaArchivo)
-    {
-        await JS.InvokeVoidAsync("open", rutaArchivo, "_self"); // Esto descargará si el header lo permite
-    }
+   
     protected override async Task OnInitializedAsync()
     {
         await CargarEmpleado();

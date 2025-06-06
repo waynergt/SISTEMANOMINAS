@@ -2,6 +2,7 @@
 using ProyectoNominas.API.Data;
 using ProyectoNominas.API.Domain.Entities;
 using ProyectoNominas.API.DTOs;
+using Microsoft.AspNetCore.Hosting;
 
 namespace ProyectoNominas.API.Services
 {
@@ -35,41 +36,38 @@ namespace ProyectoNominas.API.Services
             if (dto.Archivo == null || dto.Archivo.Length == 0)
                 return null;
 
-            // Carpeta donde guardar archivos
-            var uploadsFolder = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads", "expediente");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
+            var carpetaDestino = Path.Combine(_env.WebRootPath ?? "wwwroot", "documentos");
 
-            // Nombre único
-            var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(dto.Archivo.FileName)}";
-            var filePath = Path.Combine(uploadsFolder, fileName);
+            if (!Directory.Exists(carpetaDestino))
+                Directory.CreateDirectory(carpetaDestino);
 
-            // Guardar archivo físicamente
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            var nombreLimpio = Path.GetFileName(dto.Archivo.FileName).Replace(" ", "_");
+            var nombreArchivo = $"{Guid.NewGuid()}_{dto.TipoDocumento}_{nombreLimpio}";
+            var rutaFisica = Path.Combine(carpetaDestino, nombreArchivo);
+
+            using (var stream = new FileStream(rutaFisica, FileMode.Create))
             {
                 await dto.Archivo.CopyToAsync(stream);
             }
 
-            // Ruta relativa para que el frontend la pueda consumir
-            var rutaRelativa = $"/uploads/expediente/{fileName}";
+            var rutaPublica = $"/documentos/{nombreArchivo}";
 
-            // Guardar en base de datos
             var doc = new DocumentoEmpleado
             {
                 EmpleadoId = dto.EmpleadoId,
                 TipoDocumento = dto.TipoDocumento,
-                RutaArchivo = rutaRelativa,
+                RutaArchivo = rutaPublica,
                 FechaSubida = DateTime.Now
             };
+
             _context.DocumentosEmpleado.Add(doc);
             await _context.SaveChangesAsync();
 
-            // Retornar DTO para mostrar en frontend
             return new DocumentoExpedienteDto
             {
                 Id = doc.Id,
                 TipoDocumento = doc.TipoDocumento,
-                RutaArchivo = doc.RutaArchivo,
+                RutaArchivo = rutaPublica,
                 FechaSubida = doc.FechaSubida
             };
         }
