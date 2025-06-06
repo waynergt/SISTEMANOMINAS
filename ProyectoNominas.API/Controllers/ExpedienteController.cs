@@ -89,9 +89,18 @@ namespace ProyectoNominas.API.Controllers
             if (doc == null)
                 return NotFound();
 
+            // Ruta física
+            var rutaFisica = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", doc.RutaArchivo.TrimStart('/'));
+
+            if (System.IO.File.Exists(rutaFisica))
+            {
+                System.IO.File.Delete(rutaFisica);
+            }
+
             _context.DocumentosEmpleado.Remove(doc);
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
     }
 }
