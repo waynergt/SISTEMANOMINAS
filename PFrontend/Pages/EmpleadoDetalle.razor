@@ -143,6 +143,22 @@
     }
 
     }
+
+    .btn-action {
+        margin-right: 0.4rem;
+        margin-bottom: 0.2rem;
+        min-width: 80px;
+    }
+
+    media (max-width: 575px) {
+        .btn-action
+
+    {
+        min-width: 60px;
+        font-size: 0.95rem;
+    }
+
+    }
 </style>
 
 <div class="empleado-detalle-bg">
@@ -253,23 +269,32 @@
                 </thead>
                 <tbody>
 
-                    @foreach (var doc in documentos)
-                    {
+                <tbody>
+                        @foreach (var doc in documentos)
+                        {
+                            var urlDocumento = $"{apiBaseUrl}{doc.RutaArchivo}";
                         <tr>
                             <td>@doc.TipoDocumento</td>
                             <td>
-                                <a href="@doc.RutaArchivo" target="_blank">Ver archivo</a>
+                                <a href="@urlDocumento" target="_blank">Ver archivo</a>
                             </td>
                             <td>@doc.FechaSubida.ToShortDateString()</td>
                             <td>
-                               <button class="btn btn-outline-primary btn-sm" href="@doc.RutaArchivo" target="_blank">Ver</button>
-                                <button class="btn btn-outline-secondary btn-sm ms-1" href="@doc.RutaArchivo" download>Descargar</button>
+                                <button class="btn btn-outline-primary btn-sm btn-action"
+                                        @onclick="@(() => VerDocumento(ConstruirUrlDocumento(doc.RutaArchivo)))">
+                                    Ver
+                                </button>
+                               <a class="btn btn-outline-secondary btn-sm btn-action"
+                                  href="@ConstruirUrlDocumento(doc.RutaArchivo)"
+                                     download>
+                                     Descargar
+                                </a>
                                 <button class="btn btn-warning btn-sm ms-1" @onclick="() => EditarDocumento(doc)">Editar</button>
                                 <button class="btn btn-danger btn-sm ms-1" @onclick="() => EliminarDocumento(doc.Id)">Eliminar</button>
                             </td>
-
                         </tr>
-                    }
+                        }
+                </tbody>
                 </tbody>
             </table>
 
@@ -295,11 +320,57 @@
             </EditForm>
         }
     </div>
+    @if (mostrarModal && archivoActual != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.25)">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Ver documento</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                    </div>
+                    <div class="modal-body" style="height:70vh;">
+                        @if (archivoActual.EndsWith(".pdf"))
+                        {
+                            <iframe src="@archivoActual" width="100%" height="100%"></iframe>
+                        }
+                        else
+                        {
+                            <p>Solo vista rápida para PDF. Para otros tipos, descarga el archivo.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
+
 
 @code {
     [Parameter]
     public int EmpleadoId { get; set; }
+
+    private bool mostrarModal = false;
+    private string? archivoActual;
+
+    private void VerDocumento(string url)
+    {
+        archivoActual = url;
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        archivoActual = null;
+    }
+
+    private string apiBaseUrl = "https://localhost:7185";
+
+    private string ConstruirUrlDocumento(string rutaArchivo)
+    {
+        return $"{apiBaseUrl}{rutaArchivo}";
+    }
 
     // Datos del empleado
     private Empleado? empleado;

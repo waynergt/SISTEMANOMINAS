@@ -73,13 +73,5 @@ app.UseAuthorization();
 // ? Aquí se sirve el contenido de wwwroot
 app.UseStaticFiles();
 
-// ? Aquí se expone públicamente /documentos desde wwwroot/documentos
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "documentos")),
-    RequestPath = "/documentos"
-});
-
 app.MapControllers();
 app.Run();
