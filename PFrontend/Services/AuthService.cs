@@ -42,10 +42,14 @@ namespace PFrontend.Services
                 }
                 return (false, "Respuesta inválida del servidor.");
             }
+            else if (resp.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                // Mensaje amigable para credenciales incorrectas
+                return (false, "Correo o contraseña incorrectos");
+            }
             else
             {
-                var error = await resp.Content.ReadAsStringAsync();
-                return (false, error ?? "Login fallido.");
+                return (false, "Ocurrió un error al intentar iniciar sesión.");
             }
         }
 

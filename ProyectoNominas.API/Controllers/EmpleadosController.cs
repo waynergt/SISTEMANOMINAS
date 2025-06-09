@@ -56,19 +56,25 @@ namespace ProyectoNominas.API.Controllers
         if (empleado == null)
             return NotFound();
 
-        var dto = new EmpleadoDetalleDto
-        {
-            Id = empleado.Id,
-            Nombre = empleado.Nombre,
-            Apellido = empleado.Apellido,
-            Dpi = empleado.Dpi,
-            DepartamentoId = empleado.DepartamentoId,
-            DepartamentoNombre = empleado.Departamento?.Nombre ?? "",
-            PuestoId = empleado.PuestoId,
-            PuestoNombre = empleado.Puesto?.Nombre ?? ""
-        };
+            var dto = new EmpleadoDetalleDto
+            {
+                Id = empleado.Id,
+                Nombre = empleado.Nombre,
+                Apellido = empleado.Apellido,
+                FechaNacimiento = empleado.FechaNacimiento,
+                Direccion = empleado.Direccion,
+                Telefono = empleado.Telefono,
+                Correo = empleado.Correo,
+                Dpi = empleado.Dpi,
+                Salario = empleado.Salario,
+                EstadoLaboral = empleado.EstadoLaboral,
+                DepartamentoId = empleado.DepartamentoId,
+                DepartamentoNombre = empleado.Departamento?.Nombre ?? "",
+                PuestoId = empleado.PuestoId,
+                PuestoNombre = empleado.Puesto?.Nombre ?? ""
+            };
 
-        return Ok(dto);
+            return Ok(dto);
     }
 
 
