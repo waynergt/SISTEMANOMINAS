@@ -142,22 +142,17 @@
         font-size: 0.95rem;
     }
 
-    }
-
     .btn-action {
-        margin-right: 0.4rem;
-        margin-bottom: 0.2rem;
-        min-width: 80px;
-    }
-
-    media (max-width: 575px) {
-        .btn-action
-
-    {
         min-width: 60px;
         font-size: 0.95rem;
     }
 
+    }
+
+    .btn-action {
+        min-width: 90px;
+        margin-bottom: 0.2rem;
+        font-weight: 500;
     }
 </style>
 
@@ -268,56 +263,68 @@
                     </tr>
                 </thead>
                 <tbody>
-
-                <tbody>
-                        @foreach (var doc in documentos)
-                        {
-                            var urlDocumento = $"{apiBaseUrl}{doc.RutaArchivo}";
+                    @foreach (var doc in documentos)
+                    {
+                        var urlDocumento = ConstruirUrlDocumento(doc.RutaArchivo);
+                        var nombreArchivo = System.IO.Path.GetFileName(doc.RutaArchivo);
                         <tr>
                             <td>@doc.TipoDocumento</td>
                             <td>
-                                <a href="@urlDocumento" target="_blank">Ver archivo</a>
+                                <a href="@urlDocumento" target="_blank" class="text-decoration-none">
+                                    <i class="bi bi-file-earmark-pdf-fill text-danger" style="font-size: 1.2em; vertical-align: middle;"></i>
+                                </a>
                             </td>
                             <td>@doc.FechaSubida.ToShortDateString()</td>
-                            <td>
-                                <button class="btn btn-outline-primary btn-sm btn-action"
-                                        @onclick="@(() => VerDocumento(ConstruirUrlDocumento(doc.RutaArchivo)))">
-                                    Ver
-                                </button>
-                               <a class="btn btn-outline-secondary btn-sm btn-action"
-                                  href="@ConstruirUrlDocumento(doc.RutaArchivo)"
-                                     download>
-                                     Descargar
-                                </a>
-                                <button class="btn btn-warning btn-sm ms-1" @onclick="() => EditarDocumento(doc)">Editar</button>
-                                <button class="btn btn-danger btn-sm ms-1" @onclick="() => EliminarDocumento(doc.Id)">Eliminar</button>
+                            <td class="text-center align-middle">
+                                <div class="btn-group" role="group" aria-label="Acciones">
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            @onclick="@(() => VerDocumento(urlDocumento))">
+                                        Ver
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                            @onclick="@(() => DescargarDocumento(urlDocumento, nombreArchivo))">
+                                        Descargar
+                                    </button>
+                                    <button class="btn btn-warning btn-sm"
+                                            @onclick="() => EditarDocumento(doc)">
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-danger btn-sm"
+                                            @onclick="() => EliminarDocumento(doc.Id)">
+                                        Eliminar
+                                    </button>
+                                </div>
                             </td>
                         </tr>
-                        }
-                </tbody>
+                    }
                 </tbody>
             </table>
 
             <h5 class="mt-3 mb-2">Agregar Documento</h5>
-            <EditForm Model="@nuevoDocumento" OnValidSubmit="SubirDocumento">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <div class="mb-2">
-                    <label class="form-label">Tipo de Documento</label>
-                    <InputSelect class="form-select" @bind-Value="nuevoDocumento.TipoDocumento">
-                        <option value="">Seleccione</option>
-                        @foreach (var tipo in tiposDocumento)
-                        {
-                            <option value="@tipo">@tipo</option>
-                        }
-                    </InputSelect>
-                </div>
-                <div class="mb-2">
-                    <label class="form-label">Archivo</label>
-                    <InputFile OnChange="OnInputFileChange" />
-                </div>
-                <button class="btn btn-success" type="submit">Subir</button>
-            </EditForm>
+            <div class="mb-2">
+                <label class="form-label">Tipo de Documento</label>
+                <InputSelect class="form-select" @bind-Value="nuevoDocumento.TipoDocumento">
+                    <option value="">Seleccione</option>
+                    @foreach (var tipo in tiposDocumento)
+                    {
+                        <option value="@tipo">@tipo</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Archivo</label>
+                <InputFile OnChange="OnInputFileChange" accept=".pdf,application/pdf" @key="inputFileKey" />
+                <small class="form-text text-muted">Solo se permiten archivos en formato PDF.</small>
+                @if (!string.IsNullOrWhiteSpace(errorArchivo))
+                {
+                    <div class="text-danger mt-1">@errorArchivo</div>
+                }
+            </div>
+            <button class="btn btn-success"
+                    @onclick="SubirDocumento"
+                    disabled="@(archivoSeleccionado == null || string.IsNullOrWhiteSpace(nuevoDocumento.TipoDocumento))">
+                Subir
+            </button>
         }
     </div>
     @if (mostrarModal && archivoActual != null)
@@ -345,10 +352,74 @@
     }
 </div>
 
-
 @code {
     [Parameter]
     public int EmpleadoId { get; set; }
+
+    private Guid inputFileKey = Guid.NewGuid();
+
+    private IBrowserFile? archivoSeleccionado;
+    private string? errorArchivo;
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        errorArchivo = null;
+        var archivo = e.File;
+
+        if (archivo == null ||
+            (!archivo.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && archivo.ContentType != "application/pdf"))
+        {
+            errorArchivo = "Solo se permiten archivos PDF.";
+            archivoSeleccionado = null;
+            StateHasChanged();
+            return;
+        }
+
+        archivoSeleccionado = archivo;
+    }
+
+    private async Task SubirDocumento()
+    {
+        if (archivoSeleccionado == null || string.IsNullOrEmpty(nuevoDocumento.TipoDocumento))
+        {
+            await JS.InvokeVoidAsync("alert", "Seleccione tipo de documento y archivo.");
+            return;
+        }
+
+        errorArchivo = null;
+
+        // Validación extra por seguridad antes de subir
+        if (!archivoSeleccionado.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && archivoSeleccionado.ContentType != "application/pdf")
+        {
+            errorArchivo = "Solo se permiten archivos PDF.";
+            archivoSeleccionado = null;
+            StateHasChanged();
+            return;
+        }
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(EmpleadoId.ToString()), "EmpleadoId");
+        content.Add(new StringContent(nuevoDocumento.TipoDocumento), "TipoDocumento");
+        content.Add(new StreamContent(archivoSeleccionado.OpenReadStream(10_000_000)), "Archivo", archivoSeleccionado.Name);
+
+        var response = await Http.PostAsync("https://localhost:7185/api/Expediente/upload", content);
+        if (response.IsSuccessStatusCode)
+        {
+            nuevoDocumento = new();
+            archivoSeleccionado = null;
+            inputFileKey = Guid.NewGuid(); // LIMPIA el InputFile
+            await CargarExpediente();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Error al subir el documento.");
+        }
+    }
+
+    private async Task DescargarDocumento(string url, string nombreArchivo)
+    {
+        await JS.InvokeVoidAsync("descargarArchivo", url, nombreArchivo);
+    }
 
     private bool mostrarModal = false;
     private string? archivoActual;
@@ -384,9 +455,7 @@
     private ExpedienteValidacionDto expedienteVal = new();
     private List<string> tiposDocumento = new();
     private NuevoDocumentoModel nuevoDocumento = new();
-    private IBrowserFile? archivoSeleccionado;
 
-   
     protected override async Task OnInitializedAsync()
     {
         await CargarEmpleado();
@@ -446,36 +515,6 @@
         expedienteVal = await Http.GetFromJsonAsync<ExpedienteValidacionDto>($"https://localhost:7185/api/Expediente/validar2/{EmpleadoId}");
     }
 
-    private void OnInputFileChange(InputFileChangeEventArgs e)
-    {
-        archivoSeleccionado = e.File;
-    }
-
-    private async Task SubirDocumento()
-    {
-        if (archivoSeleccionado == null || string.IsNullOrEmpty(nuevoDocumento.TipoDocumento))
-        {
-            await JS.InvokeVoidAsync("alert", "Seleccione tipo de documento y archivo.");
-            return;
-        }
-        var content = new MultipartFormDataContent();
-        content.Add(new StringContent(EmpleadoId.ToString()), "EmpleadoId");
-        content.Add(new StringContent(nuevoDocumento.TipoDocumento), "TipoDocumento");
-        content.Add(new StreamContent(archivoSeleccionado.OpenReadStream(10_000_000)), "Archivo", archivoSeleccionado.Name);
-
-        var response = await Http.PostAsync("https://localhost:7185/api/Expediente/upload", content);
-        if (response.IsSuccessStatusCode)
-        {
-            nuevoDocumento = new();
-            archivoSeleccionado = null;
-            await CargarExpediente();
-        }
-        else
-        {
-            await JS.InvokeVoidAsync("alert", "Error al subir el documento.");
-        }
-    }
-
     private async Task EliminarDocumento(int documentoId)
     {
         var confirm = await JS.InvokeAsync<bool>("confirm", "¿Eliminar este documento?");
@@ -494,7 +533,6 @@
             await JS.InvokeVoidAsync("alert", $"No se pudo eliminar. Detalle: {error}");
         }
     }
-
 
     private void EditarDocumento(DocumentoExpedienteDto doc)
     {
