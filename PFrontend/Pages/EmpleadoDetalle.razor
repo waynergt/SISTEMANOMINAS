@@ -327,6 +327,48 @@
             </button>
         }
     </div>
+    @if (editandoDocumento && documentoEditando != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.25)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Documento</h5>
+                        <button type="button" class="btn-close" @onclick="CancelarEdicionDocumento"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label class="form-label">Tipo de Documento</label>
+                            <InputSelect class="form-select" @bind-Value="tipoDocumentoEditando">
+                                <option value="">Seleccione</option>
+                                @foreach (var tipo in tiposDocumento)
+                                {
+                                    <option value="@tipo">@tipo</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Archivo (PDF)</label>
+                            <InputFile OnChange="OnInputFileEditChange" accept=".pdf,application/pdf" @key="inputFileEditKey" />
+                            <small class="form-text text-muted">Si no selecciona un archivo, se mantendrá el actual.</small>
+                            @if (!string.IsNullOrWhiteSpace(errorArchivoEditar))
+                            {
+                                <div class="text-danger mt-1">@errorArchivoEditar</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CancelarEdicionDocumento">Cancelar</button>
+                        <button class="btn btn-success"
+                                @onclick="GuardarDocumentoEditado"
+                                disabled="@(string.IsNullOrWhiteSpace(tipoDocumentoEditando))">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
     @if (mostrarModal && archivoActual != null)
     {
         <div class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.25)">
@@ -355,6 +397,53 @@
 @code {
     [Parameter]
     public int EmpleadoId { get; set; }
+
+    private bool editandoDocumento = false;
+    private DocumentoExpedienteDto? documentoEditando;
+    private string? tipoDocumentoEditando;
+    private IBrowserFile? archivoEditando;
+    private Guid inputFileEditKey = Guid.NewGuid();
+    private string? errorArchivoEditar;
+
+    private void EditarDocumento(DocumentoExpedienteDto doc)
+    {
+        documentoEditando = new DocumentoExpedienteDto
+            {
+                Id = doc.Id,
+                TipoDocumento = doc.TipoDocumento,
+                RutaArchivo = doc.RutaArchivo,
+                FechaSubida = doc.FechaSubida
+            };
+        tipoDocumentoEditando = doc.TipoDocumento;
+        archivoEditando = null;
+        errorArchivoEditar = null;
+        inputFileEditKey = Guid.NewGuid();
+        editandoDocumento = true;
+    }
+
+    private void OnInputFileEditChange(InputFileChangeEventArgs e)
+    {
+        errorArchivoEditar = null;
+        var archivo = e.File;
+        if (archivo == null ||
+            (!archivo.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && archivo.ContentType != "application/pdf"))
+        {
+            errorArchivoEditar = "Solo se permiten archivos PDF.";
+            archivoEditando = null;
+            StateHasChanged();
+            return;
+        }
+        archivoEditando = archivo;
+    }
+
+    private void CancelarEdicionDocumento()
+    {
+        editandoDocumento = false;
+        documentoEditando = null;
+        tipoDocumentoEditando = null;
+        archivoEditando = null;
+        errorArchivoEditar = null;
+    }
 
     private Guid inputFileKey = Guid.NewGuid();
 
@@ -396,6 +485,7 @@
             StateHasChanged();
             return;
         }
+
 
         var content = new MultipartFormDataContent();
         content.Add(new StringContent(EmpleadoId.ToString()), "EmpleadoId");
@@ -455,6 +545,51 @@
     private ExpedienteValidacionDto expedienteVal = new();
     private List<string> tiposDocumento = new();
     private NuevoDocumentoModel nuevoDocumento = new();
+
+    private async Task GuardarDocumentoEditado()
+    {
+        if (documentoEditando == null) return;
+
+        if (string.IsNullOrWhiteSpace(tipoDocumentoEditando))
+        {
+            errorArchivoEditar = "Debe seleccionar el tipo de documento.";
+            return;
+        }
+
+        // Validar archivo si se seleccionó uno nuevo
+        if (archivoEditando != null &&
+            (!archivoEditando.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && archivoEditando.ContentType != "application/pdf"))
+        {
+            errorArchivoEditar = "Solo se permiten archivos PDF.";
+            return;
+        }
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(documentoEditando.Id.ToString()), "Id");
+        content.Add(new StringContent(tipoDocumentoEditando!), "TipoDocumento");
+
+        if (archivoEditando != null)
+        {
+            content.Add(new StreamContent(archivoEditando.OpenReadStream(10_000_000)), "Archivo", archivoEditando.Name);
+        }
+
+        // Endpoint para editar documento (ajusta según tu API)
+        var response = await Http.PutAsync("https://localhost:7185/api/Expediente/editar", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            editandoDocumento = false;
+            documentoEditando = null;
+            tipoDocumentoEditando = null;
+            archivoEditando = null;
+            inputFileEditKey = Guid.NewGuid();
+            await CargarExpediente();
+        }
+        else
+        {
+            errorArchivoEditar = "Error al guardar los cambios.";
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -532,12 +667,6 @@
             var error = await response.Content.ReadAsStringAsync();
             await JS.InvokeVoidAsync("alert", $"No se pudo eliminar. Detalle: {error}");
         }
-    }
-
-    private void EditarDocumento(DocumentoExpedienteDto doc)
-    {
-        // Aquí abres un modal similar al de subir, pero rellenas el modelo con los datos de doc
-        // Si necesitas el código para editar, ¡pídemelo y te lo armo completo!
     }
 
     void VolverALista() => Navigation.NavigateTo("/empleados");
