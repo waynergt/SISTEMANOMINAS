@@ -45,34 +45,33 @@ namespace ProyectoNominas.API.Controllers
         }
 
         // GET: api/Empleados/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<EmpleadoDto>> GetEmpleado(int id)
+         [HttpGet("{id}")]
+    public async Task<ActionResult<EmpleadoDetalleDto>> GetEmpleado(int id)
+    {
+        var empleado = await _context.Empleados
+            .Include(e => e.Departamento)
+            .Include(e => e.Puesto)
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (empleado == null)
+            return NotFound();
+
+        var dto = new EmpleadoDetalleDto
         {
-            var empleado = await _context.Empleados
-                .Include(e => e.Departamento)
-                .Include(e => e.Puesto)
-                .Where(e => e.Id == id)
-                .Select(e => new EmpleadoDto
-                {
-                    Id = e.Id,
-                    Nombre = e.Nombre,
-                    Apellido = e.Apellido,
-                    Dpi = e.Dpi,
-                    Correo = e.Correo,
-                    Salario = e.Salario,
-                    DepartamentoId = e.DepartamentoId,
-                    PuestoId = e.PuestoId,
-                    Departamento = e.Departamento != null ? e.Departamento.Nombre : string.Empty,
-                    Puesto = e.Puesto != null ? e.Puesto.Nombre : string.Empty,
-                    EstadoLaboral = e.EstadoLaboral
-                })
-                .FirstOrDefaultAsync();
+            Id = empleado.Id,
+            Nombre = empleado.Nombre,
+            Apellido = empleado.Apellido,
+            Dpi = empleado.Dpi,
+            DepartamentoId = empleado.DepartamentoId,
+            DepartamentoNombre = empleado.Departamento?.Nombre ?? "",
+            PuestoId = empleado.PuestoId,
+            PuestoNombre = empleado.Puesto?.Nombre ?? ""
+        };
 
-            if (empleado == null)
-                return NotFound();
+        return Ok(dto);
+    }
 
-            return Ok(empleado);
-        }
+
 
         // POST: api/Empleados
     

@@ -176,8 +176,9 @@
                 <div class="card-body">
                     <h5 class="card-title">@empleado.Nombre @empleado.Apellido</h5>
                     <p><b>DPI:</b> @empleado.Dpi</p>
-                    <p><b>Departamento:</b> @empleado.DepartamentoId</p>
-                    <p><b>Puesto:</b> @empleado.PuestoId</p>
+                    <p><b>Departamento:</b> @empleado.DepartamentoNombre</p>
+                    <p><b>Puesto:</b> @empleado.PuestoNombre</p>
+          
                     <!-- Puedes agregar más campos aquí -->
                 </div>
             </div>
@@ -694,7 +695,10 @@
         public string Apellido { get; set; }
         public string Dpi { get; set; }
         public int DepartamentoId { get; set; }
+        public string DepartamentoNombre { get; set; }
         public int PuestoId { get; set; }
+        public string PuestoNombre { get; set; }
+
     }
     public class DocumentoExpedienteDto
     {
