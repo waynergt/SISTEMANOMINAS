@@ -274,9 +274,16 @@
             <div class="modal fade show d-block" tabindex="-1" style="background:rgba(44,49,77,.16);z-index:2000;">
                 <div class="modal-dialog modal-xl modal-dialog-centered">
                     <div class="modal-content">
-                        <div class="modal-header">
-                            <h4 class="modal-title">Detalle de Nómina - @nominaDetalle.Periodo</h4>
-                            <button type="button" class="btn-close" @onclick="CerrarDetalle"></button>
+                        <div class="modal-footer">
+                            @if (nominaDetalle != null && nominaDetalle.Detalles.Count > 1)
+                            {
+                                <button class="btn btn-descargar" @onclick="DescargarNominaCompleta">
+                                    <i class="bi bi-download"></i> Descargar Nómina Completa
+                                </button>
+                            }
+                            <button class="btn btn-secondary" @onclick="CerrarDetalle">
+                                <i class="bi bi-x-circle"></i> Cerrar
+                            </button>
                         </div>
                         <div class="modal-body">
                             <div class="mb-3"><b>Fecha inicio:</b> @nominaDetalle.FechaInicio.ToShortDateString() &nbsp; <b>Fecha fin:</b> @nominaDetalle.FechaFin.ToShortDateString()</div>
@@ -417,7 +424,12 @@
 
 @code {
 
-
+    async Task DescargarNominaCompleta()
+    {
+        // Suponiendo que tienes (o crearás) un endpoint: api/Nomina/descargar-completa?nominaId={id}
+        var url = $"https://localhost:7185/api/Nomina/descargar-completa?nominaId={nominaDetalle?.Id}";
+        await JS.InvokeVoidAsync("open", url, "_blank");
+    }
     private void Regresar() => Navigation.NavigateTo("/inicio");
 
     private List<EmpleadoDto> empleados = new();
