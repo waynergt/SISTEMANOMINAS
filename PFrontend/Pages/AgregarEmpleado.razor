@@ -1,6 +1,7 @@
 ﻿@page "/empleados/agregar"
 @inject HttpClient Http
 @inject NavigationManager Navigation
+@inject PFrontend.Services.AlertService AlertService
 @using PFrontend.Models
 
 <style>
@@ -112,6 +113,7 @@
         border-radius: 50%;
         padding: .55rem;
     }
+
     media (max-width: 575px) {
         .agregar-card
 
@@ -139,11 +141,6 @@
             <i class="bi bi-person-plus-fill icon-person"></i>
             Agregar Nuevo Empleado
         </div>
-        @if (!string.IsNullOrEmpty(mensaje))
-        {
-            <div class="alert alert-success">@mensaje</div>
-        }
-
         <EditForm Model="nuevoEmpleado" OnValidSubmit="GuardarEmpleado">
             <DataAnnotationsValidator />
             <ValidationSummary />
@@ -204,11 +201,6 @@
             </button>
         </EditForm>
 
-        @if (!string.IsNullOrEmpty(error))
-        {
-            <div class="alert alert-danger mt-3">@error</div>
-        }
-
         @if (!string.IsNullOrEmpty(jsonDebug))
         {
             <div class="alert alert-info mt-3">
@@ -223,8 +215,6 @@
     private EmpleadoEditModel nuevoEmpleado = new();
     private List<DepartamentoModelV2> departamentos = new();
     private List<PuestoModelV2> puestos = new();
-    private string mensaje = "";
-    private string error = "";
     private string jsonDebug = "";
 
     protected override async Task OnInitializedAsync()
@@ -236,7 +226,7 @@
         }
         catch (Exception ex)
         {
-            error = $"Error al cargar catálogos: {ex.Message}";
+            await AlertService.ShowAlert($"Error al cargar catálogos: {ex.Message}", PFrontend.Services.AlertService.AlertType.Error);
         }
     }
 
@@ -244,23 +234,35 @@
     {
         try
         {
-            
+            // Validaciones simples antes de enviar (puedes personalizar según tus reglas)
+            if (string.IsNullOrWhiteSpace(nuevoEmpleado.Nombre) ||
+                string.IsNullOrWhiteSpace(nuevoEmpleado.Apellido) ||
+                string.IsNullOrWhiteSpace(nuevoEmpleado.Dpi) ||
+                string.IsNullOrWhiteSpace(nuevoEmpleado.Correo) ||
+                nuevoEmpleado.Salario <= 0 ||
+                string.IsNullOrWhiteSpace(nuevoEmpleado.EstadoLaboral) ||
+                nuevoEmpleado.DepartamentoId == 0 ||
+                nuevoEmpleado.PuestoId == 0)
+            {
+                await AlertService.ShowAlert("Por favor llena todos los campos obligatorios.", PFrontend.Services.AlertService.AlertType.Warning);
+                return;
+            }
 
             var response = await Http.PostAsJsonAsync("https://localhost:7185/api/Empleados", nuevoEmpleado);
             if (response.IsSuccessStatusCode)
             {
-                mensaje = "Empleado agregado exitosamente.";
+                await AlertService.ShowAlert("Empleado agregado exitosamente.", PFrontend.Services.AlertService.AlertType.Success);
                 await Task.Delay(1000);
                 Navigation.NavigateTo("/empleados");
             }
             else
             {
-                error = "Error al agregar el empleado. Por favor verifica los datos.";
+                await AlertService.ShowAlert("Error al agregar el empleado. Por favor verifica los datos.", PFrontend.Services.AlertService.AlertType.Error);
             }
         }
         catch (Exception ex)
         {
-            error = $"Error al agregar el empleado: {ex.Message}";
+            await AlertService.ShowAlert($"Error al agregar el empleado: {ex.Message}", PFrontend.Services.AlertService.AlertType.Error);
         }
     }
 

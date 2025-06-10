@@ -1,0 +1,70 @@
+﻿@using PFrontend.Services
+@inject AlertService AlertService
+@implements IDisposable
+
+@if (visible)
+{
+    <div class="custom-alert @AlertClass" style="z-index:20000;">
+        <i class="@IconClass"></i>
+        <span>@message</span>
+        <button type="button" class="btn-close" @onclick="HideAlert"></button>
+    </div>
+}
+
+@code {
+    private string message = "";
+    private AlertService.AlertType type = AlertService.AlertType.Info;
+    private bool visible = false;
+    private int duration = 3000;
+
+    private string AlertClass =>
+        type switch
+        {
+            AlertService.AlertType.Success => "custom-alert-success",
+            AlertService.AlertType.Error => "custom-alert-error",
+            AlertService.AlertType.Warning => "custom-alert-warning",
+            AlertService.AlertType.Info => "custom-alert-info",
+            _ => "custom-alert-info"
+        };
+
+    private string IconClass =>
+        type switch
+        {
+            AlertService.AlertType.Success => "bi bi-check-circle-fill",
+            AlertService.AlertType.Error => "bi bi-x-circle-fill",
+            AlertService.AlertType.Warning => "bi bi-exclamation-triangle-fill",
+            AlertService.AlertType.Info => "bi bi-info-circle-fill",
+            _ => "bi bi-info-circle-fill"
+        };
+
+    protected override void OnInitialized()
+    {
+        AlertService.OnShow += ShowAlert;
+        AlertService.OnHide += HideAlert;
+        // Línea de prueba: esto debe mostrar la alerta al cargar cualquier página
+        _ = ShowAlert("ALERTA DE PRUEBA", AlertService.AlertType.Success);
+    }
+
+    private async Task ShowAlert(string msg, AlertService.AlertType tipo)
+    {
+        message = msg;
+        type = tipo;
+        visible = true;
+        StateHasChanged();
+        await Task.Delay(duration);
+        await HideAlert();
+    }
+
+    private async Task HideAlert()
+    {
+        visible = false;
+        StateHasChanged();
+        await Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        AlertService.OnShow -= ShowAlert;
+        AlertService.OnHide -= HideAlert;
+    }
+}
