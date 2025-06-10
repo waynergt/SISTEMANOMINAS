@@ -60,7 +60,7 @@ namespace ProyectoNominas.API.Services
                 decimal otrosDescuentos = 0;
 
                 // Simulación de bonificaciones y comisiones
-                decimal bonificaciones = 0;
+                decimal bonificaciones =250;
                 decimal comisiones = 0;
 
                 // Total a pagar
