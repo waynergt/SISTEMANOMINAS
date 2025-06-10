@@ -1,0 +1,189 @@
+﻿@page "/register"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using PFrontend.Models
+
+<style>
+    .register-bg {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #232945 0%, #3949AB 100%);
+    }
+
+    .register-card {
+        background: #fff;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 32px rgba(50, 50, 93, 0.13);
+        max-width: 400px;
+        margin: 4rem auto;
+        padding: 2.5rem 2rem;
+        position: relative;
+    }
+
+    .register-title {
+        color: #232945;
+        font-weight: 700;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .btn-register {
+        background: #3949AB;
+        color: #fff;
+        border-radius: 8px;
+        border: none;
+        font-weight: 600;
+        padding: .5rem 1.1rem;
+        width: 100%;
+    }
+
+        .btn-register:hover {
+            background: #232945;
+            color: #FFB300;
+        }
+
+    .btn-regresar {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: #3949AB;
+        color: #fff;
+        border: none;
+        border-radius: 1.5rem;
+        padding: 0.55rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0 0 1.4rem 0;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        box-shadow: 0 2px 10px rgba(57,73,171,0.08);
+        position: absolute;
+        left: 1.2rem;
+        top: 1.2rem;
+        z-index: 5;
+    }
+
+        .btn-regresar:hover, .btn-regresar:focus {
+            background: #232945;
+            color: #fff;
+            text-decoration: none;
+        }
+</style>
+
+<div class="register-bg">
+    <div class="register-card">
+        <button class="btn-regresar" type="button" @onclick="Regresar" title="Regresar">
+            <i class="bi bi-arrow-left"></i> Regresar
+        </button>
+        <div class="register-title">Crear Nuevo Usuario</div>
+        @if (!string.IsNullOrEmpty(success))
+        {
+            <div class="alert alert-success">@success</div>
+        }
+        @if (!string.IsNullOrEmpty(error))
+        {
+            <div class="alert alert-danger">@error</div>
+        }
+
+        <EditForm Model="model" OnValidSubmit="HandleRegister">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label>Usuario</label>
+                <InputText class="form-control" @bind-Value="model.NombreUsuario" />
+            </div>
+            <div class="mb-3">
+                <label>Email</label>
+                <InputText type="email" class="form-control" @bind-Value="model.Correo" />
+            </div>
+            <div class="mb-3">
+                <label>Contraseña</label>
+                <InputText type="password" class="form-control" @bind-Value="model.Contrasena" />
+            </div>
+            <div class="mb-3">
+                <label>Confirmar Contraseña</label>
+                <InputText type="password" class="form-control" @bind-Value="model.ConfirmarContrasena" />
+            </div>
+            <div class="mb-3">
+                <label>Estado</label>
+                <InputSelect class="form-control" @bind-Value="model.EstaActivo">
+                    <option value="true">Activo</option>
+                    <option value="false">Inactivo</option>
+                </InputSelect>
+            </div>
+            <div class="mb-3">
+                <label>Rol</label>
+                <InputSelect class="form-control" @bind-Value="selectedRolId">
+                    <option value="0">Seleccione rol</option>
+                    <option value="2">Empleado</option>
+                    <option value="1">Administrador</option>
+                </InputSelect>
+            </div>
+            <button class="btn-register" type="submit">Registrar</button>
+        </EditForm>
+        <div class="text-center mt-3">
+            <a @onclick='() => Navigation.NavigateTo("/login")' style="cursor:pointer;">¿Ya tienes cuenta? Inicia sesión</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    UsuarioRegistroModel model = new();
+    string error = "";
+    string success = "";
+
+    // Empleado = 2, Administrador = 1 (ajusta estos IDs según tu BD)
+    int selectedRolId = 0;
+
+    private void Regresar()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private async Task HandleRegister()
+    {
+        error = "";
+        success = "";
+
+        if (model.Contrasena != model.ConfirmarContrasena)
+        {
+            error = "Las contraseñas no coinciden.";
+            return;
+        }
+        if (selectedRolId == 0)
+        {
+            error = "Debe seleccionar un rol.";
+            return;
+        }
+
+        var response = await Http.PostAsJsonAsync("https://localhost:7185/api/Auth/register", new
+        {
+            NombreUsuario = model.NombreUsuario,
+            Correo = model.Correo,
+            Contrasena = model.Contrasena,
+            EstaActivo = model.EstaActivo,
+            RolesId = new List<int> { selectedRolId }
+        });
+
+        if (response.IsSuccessStatusCode)
+        {
+            success = "Usuario registrado correctamente. Ahora puedes iniciar sesión.";
+            await Task.Delay(1500);
+            Navigation.NavigateTo("/login");
+        }
+        else
+        {
+            var msg = await response.Content.ReadAsStringAsync();
+            error = $"Error al registrar: {msg}";
+        }
+    }
+
+    public class UsuarioRegistroModel
+    {
+        public string NombreUsuario { get; set; } = "";
+        public string Correo { get; set; } = "";
+        public string Contrasena { get; set; } = "";
+        public string ConfirmarContrasena { get; set; } = "";
+        public bool EstaActivo { get; set; } = true;
+    }
+}

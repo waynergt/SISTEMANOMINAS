@@ -11,6 +11,8 @@ namespace ProyectoNominas.API.Domain.Entities
         [StringLength(100, ErrorMessage = "El nombre no puede tener más de 100 caracteres")]
         public string Nombre { get; set; } = string.Empty;
 
+        public bool Activo { get; set; } = true;
+
         // Relación con empleados
         public ICollection<Empleado>? Empleados { get; set; }
     }

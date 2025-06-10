@@ -44,5 +44,29 @@
                 </div>
             </div>
         </div>
+        <!-- Nuevo card: Puestos -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm mi-card-resumen h-100 text-center">
+                <div class="card-body">
+                    <i class="bi bi-briefcase-fill" style="font-size:2.5rem; color:#3949AB;"></i>
+                    <h5 class="card-title mt-2">Puestos</h5>
+                    <button class="btn btn-info mt-2 text-white" @onclick="@(()=> Navigation.NavigateTo("/puestos"))">
+                        Ver Puestos
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Nuevo card: Departamentos -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm mi-card-resumen h-100 text-center">
+                <div class="card-body">
+                    <i class="bi bi-building" style="font-size:2.5rem; color:#232945;"></i>
+                    <h5 class="card-title mt-2">Departamentos</h5>
+                    <button class="btn btn-secondary mt-2" @onclick="@(()=> Navigation.NavigateTo("/departamentos"))">
+                        Ver Departamentos
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

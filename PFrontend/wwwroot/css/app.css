@@ -101,3 +101,114 @@ a, .btn-link {
 code {
     color: #c02d76;
 }
+.custom-alert {
+    position: fixed;
+    top: 1.2rem;
+    right: 1.5rem;
+    min-width: 290px;
+    max-width: 90vw;
+    padding: 1rem 2.2rem 1rem 1.1rem;
+    border-radius: 1rem;
+    font-weight: 600;
+    font-size: 1.08rem;
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    box-shadow: 0 6px 32px rgba(50,50,93,0.13);
+    opacity: 0.98;
+    transition: opacity .25s, top .3s;
+}
+
+.custom-alert-success {
+    background: #e7fbe8;
+    color: #2b7b34;
+    border: 1.5px solid #36c95f;
+}
+
+.custom-alert-error {
+    background: #ffeaea;
+    color: #c92c2c;
+    border: 1.5px solid #e45e5e;
+}
+
+.custom-alert-warning {
+    background: #fffbe6;
+    color: #bfa900;
+    border: 1.5px solid #ffe066;
+}
+
+.custom-alert-info {
+    background: #ecf1ff;
+    color: #3949ab;
+    border: 1.5px solid #3949ab77;
+}
+
+.custom-alert .btn-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.1rem;
+    margin-left: auto;
+    opacity: .6;
+    transition: opacity .2s;
+}
+
+    .custom-alert .btn-close:hover {
+        opacity: 1;
+    }
+.custom-alert {
+    position: fixed;
+    top: 1.2rem;
+    right: 1.5rem;
+    min-width: 290px;
+    max-width: 90vw;
+    padding: 1rem 2.2rem 1rem 1.1rem;
+    border-radius: 1rem;
+    font-weight: 600;
+    font-size: 1.08rem;
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    box-shadow: 0 6px 32px rgba(50,50,93,0.13);
+    opacity: 0.98;
+    transition: opacity .25s, top .3s;
+    z-index: 20000;
+}
+
+.custom-alert-success {
+    background: #e7fbe8;
+    color: #2b7b34;
+    border: 1.5px solid #36c95f;
+}
+
+.custom-alert-error {
+    background: #ffeaea;
+    color: #c92c2c;
+    border: 1.5px solid #e45e5e;
+}
+
+.custom-alert-warning {
+    background: #fffbe6;
+    color: #bfa900;
+    border: 1.5px solid #ffe066;
+}
+
+.custom-alert-info {
+    background: #ecf1ff;
+    color: #3949ab;
+    border: 1.5px solid #3949ab77;
+}
+
+.custom-alert .btn-close {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.1rem;
+    margin-left: auto;
+    opacity: .6;
+    transition: opacity .2s;
+}
+
+    .custom-alert .btn-close:hover {
+        opacity: 1;
+    }

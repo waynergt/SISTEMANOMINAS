@@ -60,7 +60,11 @@ namespace ProyectoNominas.API.Controllers
             };
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var jwtKey = _config["Jwt:Key"];
+            if (jwtKey == null)
+                return StatusCode(500, "JWT Key no configurada en appsettings.");
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var tokenDescriptor = new SecurityTokenDescriptor
@@ -84,6 +88,50 @@ namespace ProyectoNominas.API.Controllers
                     Roles = roles
                 }
             });
+        }
+
+        [AllowAnonymous]
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] UsuarioRegistroDto dto)
+        {
+            // Validación básica
+            if (string.IsNullOrEmpty(dto.NombreUsuario) || string.IsNullOrEmpty(dto.Correo) || string.IsNullOrEmpty(dto.Contrasena))
+                return BadRequest("Todos los campos son obligatorios.");
+
+            // Verificar si el correo ya existe
+            if (await _context.Usuarios.AnyAsync(u => u.Correo == dto.Correo))
+                return BadRequest("Ya existe un usuario con este correo.");
+
+            // Hashear la contraseña
+            string passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Contrasena);
+
+            // Crear el usuario
+            var nuevoUsuario = new ProyectoNominas.API.Domain.Entities.Usuario
+            {
+                NombreUsuario = dto.NombreUsuario,
+                Correo = dto.Correo,
+                ContrasenaHash = passwordHash,
+                EstaActivo = dto.EstaActivo
+            };
+
+            _context.Usuarios.Add(nuevoUsuario);
+            await _context.SaveChangesAsync();
+
+            // Asignar roles si se envían (opcional)
+            if (dto.RolesId != null && dto.RolesId.Count > 0)
+            {
+                foreach (var rolId in dto.RolesId)
+                {
+                    _context.UsuarioRoles.Add(new ProyectoNominas.API.Domain.Entities.UsuarioRol
+                    {
+                        UsuarioId = nuevoUsuario.Id,
+                        RolId = rolId
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { message = "Usuario registrado correctamente" });
         }
     }
 }

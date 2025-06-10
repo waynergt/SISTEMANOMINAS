@@ -45,34 +45,39 @@ namespace ProyectoNominas.API.Controllers
         }
 
         // GET: api/Empleados/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<EmpleadoDto>> GetEmpleado(int id)
-        {
-            var empleado = await _context.Empleados
-                .Include(e => e.Departamento)
-                .Include(e => e.Puesto)
-                .Where(e => e.Id == id)
-                .Select(e => new EmpleadoDto
-                {
-                    Id = e.Id,
-                    Nombre = e.Nombre,
-                    Apellido = e.Apellido,
-                    Dpi = e.Dpi,
-                    Correo = e.Correo,
-                    Salario = e.Salario,
-                    DepartamentoId = e.DepartamentoId,
-                    PuestoId = e.PuestoId,
-                    Departamento = e.Departamento != null ? e.Departamento.Nombre : string.Empty,
-                    Puesto = e.Puesto != null ? e.Puesto.Nombre : string.Empty,
-                    EstadoLaboral = e.EstadoLaboral
-                })
-                .FirstOrDefaultAsync();
+         [HttpGet("{id}")]
+    public async Task<ActionResult<EmpleadoDetalleDto>> GetEmpleado(int id)
+    {
+        var empleado = await _context.Empleados
+            .Include(e => e.Departamento)
+            .Include(e => e.Puesto)
+            .FirstOrDefaultAsync(e => e.Id == id);
 
-            if (empleado == null)
-                return NotFound();
+        if (empleado == null)
+            return NotFound();
 
-            return Ok(empleado);
-        }
+            var dto = new EmpleadoDetalleDto
+            {
+                Id = empleado.Id,
+                Nombre = empleado.Nombre,
+                Apellido = empleado.Apellido,
+                FechaNacimiento = empleado.FechaNacimiento,
+                Direccion = empleado.Direccion,
+                Telefono = empleado.Telefono,
+                Correo = empleado.Correo,
+                Dpi = empleado.Dpi,
+                Salario = empleado.Salario,
+                EstadoLaboral = empleado.EstadoLaboral,
+                DepartamentoId = empleado.DepartamentoId,
+                DepartamentoNombre = empleado.Departamento?.Nombre ?? "",
+                PuestoId = empleado.PuestoId,
+                PuestoNombre = empleado.Puesto?.Nombre ?? ""
+            };
+
+            return Ok(dto);
+    }
+
+
 
         // POST: api/Empleados
     

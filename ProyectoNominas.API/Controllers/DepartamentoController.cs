@@ -23,17 +23,14 @@ namespace ProyectoNominas.API.Controllers
             return await _context.Departamentos.ToListAsync();
         }
 
-        // GET: api/Departamento/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Departamento>> GetDepartamento(int id)
+        // NUEVO ENDPOINT: SOLO ACTIVOS
+        // GET: api/Departamento/activos
+        [HttpGet("activos")]
+        public async Task<ActionResult<IEnumerable<Departamento>>> GetDepartamentosActivos()
         {
-            var departamento = await _context.Departamentos.FindAsync(id);
-
-            if (departamento == null)
-                return NotFound();
-
-            return departamento;
+            return await _context.Departamentos.Where(d => d.Activo).ToListAsync();
         }
+
 
         // POST: api/Departamento
         [HttpPost]
@@ -42,7 +39,7 @@ namespace ProyectoNominas.API.Controllers
             _context.Departamentos.Add(departamento);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetDepartamento), new { id = departamento.Id }, departamento);
+            return CreatedAtAction(nameof(GetDepartamentos), new { id = departamento.Id }, departamento);
         }
 
         // PUT: api/Departamento/5

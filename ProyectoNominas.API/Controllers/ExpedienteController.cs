@@ -89,9 +89,57 @@ namespace ProyectoNominas.API.Controllers
             if (doc == null)
                 return NotFound();
 
+            // Ruta física
+            var rutaFisica = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", doc.RutaArchivo.TrimStart('/'));
+
+            if (System.IO.File.Exists(rutaFisica))
+            {
+                System.IO.File.Delete(rutaFisica);
+            }
+
             _context.DocumentosEmpleado.Remove(doc);
             await _context.SaveChangesAsync();
             return NoContent();
         }
+        [HttpPut("editar")]
+        public async Task<IActionResult> EditarDocumento([FromForm] EditarDocumentoExpedienteDto dto)
+        {
+            // Busca el documento original
+            var doc = await _context.DocumentosEmpleado.FindAsync(dto.Id);
+            if (doc == null)
+                return NotFound("Documento no encontrado.");
+
+            // Actualiza el tipo de documento si cambió
+            if (!string.IsNullOrWhiteSpace(dto.TipoDocumento))
+                doc.TipoDocumento = dto.TipoDocumento;
+
+            // Si se subió un archivo, reemplaza el archivo físico y la ruta
+            if (dto.Archivo != null)
+            {
+                // Elimina el archivo anterior si existe
+                var rutaFisicaAnterior = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", doc.RutaArchivo.TrimStart('/'));
+                if (System.IO.File.Exists(rutaFisicaAnterior))
+                    System.IO.File.Delete(rutaFisicaAnterior);
+
+                // Guardar el nuevo archivo
+                var nombreNuevo = $"{Guid.NewGuid()}_{dto.Archivo.FileName}";
+                var rutaRelativa = $"/uploads/{nombreNuevo}";
+                var rutaFisicaNueva = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", nombreNuevo);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(rutaFisicaNueva)!);
+
+                using (var stream = new FileStream(rutaFisicaNueva, FileMode.Create))
+                {
+                    await dto.Archivo.CopyToAsync(stream);
+                }
+
+                doc.RutaArchivo = rutaRelativa;
+                doc.FechaSubida = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok();
+        }
+
     }
 }

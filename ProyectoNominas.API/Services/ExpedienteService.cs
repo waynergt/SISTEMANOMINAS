@@ -2,6 +2,7 @@
 using ProyectoNominas.API.Data;
 using ProyectoNominas.API.Domain.Entities;
 using ProyectoNominas.API.DTOs;
+using Microsoft.AspNetCore.Hosting;
 
 namespace ProyectoNominas.API.Services
 {
@@ -32,22 +33,30 @@ namespace ProyectoNominas.API.Services
 
         public async Task<DocumentoExpedienteDto?> SubirDocumento(CrearDocumentoExpedienteDto dto)
         {
-            var uploads = Path.Combine(_env.WebRootPath, "uploads");
-            Directory.CreateDirectory(uploads);
+            if (dto.Archivo == null || dto.Archivo.Length == 0)
+                return null;
 
-            var fileName = $"{Guid.NewGuid()}_{dto.Archivo.FileName}";
-            var filePath = Path.Combine(uploads, fileName);
+            var carpetaDestino = Path.Combine(_env.WebRootPath ?? "wwwroot", "documentos");
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
+            if (!Directory.Exists(carpetaDestino))
+                Directory.CreateDirectory(carpetaDestino);
+
+            var nombreLimpio = Path.GetFileName(dto.Archivo.FileName).Replace(" ", "_");
+            var nombreArchivo = $"{Guid.NewGuid()}_{dto.TipoDocumento}_{nombreLimpio}";
+            var rutaFisica = Path.Combine(carpetaDestino, nombreArchivo);
+
+            using (var stream = new FileStream(rutaFisica, FileMode.Create))
             {
                 await dto.Archivo.CopyToAsync(stream);
             }
+
+            var rutaPublica = $"/documentos/{nombreArchivo}";
 
             var doc = new DocumentoEmpleado
             {
                 EmpleadoId = dto.EmpleadoId,
                 TipoDocumento = dto.TipoDocumento,
-                RutaArchivo = $"/uploads/{fileName}",
+                RutaArchivo = rutaPublica,
                 FechaSubida = DateTime.Now
             };
 
@@ -58,7 +67,7 @@ namespace ProyectoNominas.API.Services
             {
                 Id = doc.Id,
                 TipoDocumento = doc.TipoDocumento,
-                RutaArchivo = doc.RutaArchivo,
+                RutaArchivo = rutaPublica,
                 FechaSubida = doc.FechaSubida
             };
         }

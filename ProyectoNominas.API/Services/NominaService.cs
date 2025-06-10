@@ -15,12 +15,16 @@ namespace ProyectoNominas.API.Services
         }
 
         // Crea una nómina para un periodo, calculando todos los conceptos
-        public async Task<Nomina> GenerarNominaAsync(DateTime fechaInicio, DateTime fechaFin, string periodo)
+        public async Task<Nomina> GenerarNominaAsync(DateTime fechaInicio, DateTime fechaFin, string periodo, int? empleadoId = null)
         {
-            var empleados = await _context.Empleados
+            var empleadosQuery = _context.Empleados
                 .Include(e => e.Puesto)
-                .Where(e => e.EstadoLaboral == "Activo")
-                .ToListAsync();
+                .Where(e => e.EstadoLaboral == "Activo");
+
+            if (empleadoId.HasValue)
+                empleadosQuery = empleadosQuery.Where(e => e.Id == empleadoId.Value);
+
+            var empleados = await empleadosQuery.ToListAsync();
 
             // Aquí puedes cargar parámetros legales (IGSS, IRTRA, etc.) desde la BD si tienes
             decimal porcentajeIGSS = 0.0483M;     // Ejemplo: 4.83% para empleado
@@ -56,7 +60,7 @@ namespace ProyectoNominas.API.Services
                 decimal otrosDescuentos = 0;
 
                 // Simulación de bonificaciones y comisiones
-                decimal bonificaciones = 0;
+                decimal bonificaciones =250;
                 decimal comisiones = 0;
 
                 // Total a pagar
@@ -105,6 +109,16 @@ namespace ProyectoNominas.API.Services
                 .Include(n => n.Detalles)
                 .OrderByDescending(n => n.FechaInicio)
                 .ToListAsync();
+        }
+
+        internal async Task ObtenerNominaDetalleAsync(int id)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal async Task SimularNominaAsync(DateTime fechaInicio, DateTime fechaFin, string periodo)
+        {
+            throw new NotImplementedException();
         }
     }
 }

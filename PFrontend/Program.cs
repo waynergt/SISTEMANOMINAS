@@ -17,6 +17,7 @@ namespace PFrontend
             builder.Services.AddScoped<ExpedienteService>();
             builder.Services.AddScoped<AuthService>();
 
+            builder.Services.AddSingleton<AlertService>();
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("es-GT");
             CultureInfo.DefaultThreadCurrentUICulture = new CultureInfo("es-GT");
 

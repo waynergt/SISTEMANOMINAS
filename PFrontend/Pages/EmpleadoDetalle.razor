@@ -3,153 +3,536 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<h3>Detalle del Empleado</h3>
+<style>
+    .empleado-detalle-bg {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #232945 0%, #3949AB 100%);
+        padding: 0;
+        margin: 0;
+    }
 
-@if (empleado == null)
-{
-    <p>Cargando empleado...</p>
-}
-else
-{
-    <div class="card mb-3">
-        <div class="card-body">
-            <h5>@empleado.Nombre @empleado.Apellido</h5>
-            <p><b>DPI:</b> @empleado.Dpi</p>
-            <p><b>Departamento:</b> @empleado.DepartamentoId</p>
-            <p><b>Puesto:</b> @empleado.PuestoId</p>
-            <!-- Puedes agregar más campos aquí -->
+    .empleado-detalle-card {
+        background: #fff;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 24px rgba(50, 50, 93, 0.13);
+        max-width: 900px;
+        width: 98vw;
+        margin: 2.5rem auto;
+        padding: 2.5rem 2rem 2rem 2rem;
+        position: relative;
+    }
+
+    .btn-regresar {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: #3949AB;
+        color: #fff;
+        border: none;
+        border-radius: 1.5rem;
+        padding: 0.55rem 1.5rem;
+        font-weight: 600;
+        font-size: 1rem;
+        margin: 0 0 1.4rem 0;
+        cursor: pointer;
+        transition: background 0.2s, color 0.2s;
+        box-shadow: 0 2px 10px rgba(57,73,171,0.08);
+        position: absolute;
+        left: 1.2rem;
+        top: 1.2rem;
+        z-index: 5;
+    }
+
+        .btn-regresar:hover, .btn-regresar:focus {
+            background: #232945;
+            color: #fff;
+            text-decoration: none;
+        }
+
+    .card-title-main {
+        color: #232945;
+        font-weight: 700;
+        margin-bottom: 1.2rem;
+        text-align: center;
+    }
+
+    .section-title {
+        color: #3949AB;
+        font-weight: 700;
+        margin-top: 2.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        color: #3949AB;
+        font-weight: 600;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+        text-align: center;
+        color: #232945;
+    }
+
+    .table thead th {
+        background: #3949AB;
+        color: #fff;
+        border-bottom: 2px solid #232945;
+        font-weight: 600;
+    }
+
+    .table tbody tr:hover {
+        background: #F5F6FA;
+    }
+
+    .btn-success {
+        background: #3949AB;
+        color: #fff;
+        border: none;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: background .2s, color .2s;
+    }
+
+        .btn-success:hover {
+            background: #232945;
+            color: #FFB300;
+        }
+
+    .btn-secondary {
+        background: #FFB300;
+        color: #232945;
+        border: none;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: background .2s, color .2s;
+    }
+
+        .btn-secondary:hover {
+            background: #ffe49c;
+            color: #232945;
+        }
+
+    .btn-warning {
+        color: #fff;
+        background: #FFB300;
+        border: none;
+    }
+
+        .btn-warning:hover {
+            background: #ffe49c;
+            color: #232945;
+        }
+    media (max-width: 575px) {
+        .empleado-detalle-card
+
+    {
+        padding: 1.3rem 0.4rem 1rem 0.4rem;
+        max-width: 99vw;
+    }
+
+    .btn-regresar {
+        left: .4rem;
+        top: .4rem;
+        font-size: 1.6rem;
+        padding: 0.45rem 1.15rem;
+    }
+
+    .table th, .table td {
+        font-size: 0.95rem;
+    }
+
+    .btn-action {
+        min-width: 60px;
+        font-size: 0.95rem;
+    }
+
+    }
+
+    .btn-action {
+        min-width: 90px;
+        margin-bottom: 0.2rem;
+        font-weight: 500;
+    }
+</style>
+
+<div class="empleado-detalle-bg">
+    <div class="empleado-detalle-card">
+        <button class="btn-regresar" @onclick="VolverALista" title="Volver">
+            <i class="bi bi-arrow-left"></i> Regresar
+        </button>
+        <div class="card-title-main">
+            <i class="bi bi-person-badge" style="font-size:2.2rem;color:#3949AB;background:#F5F6FA;border-radius:50%;padding:.5rem;"></i>
+            Detalle del Empleado
         </div>
-    </div>
 
-    <h4>Información Académica</h4>
+        @if (empleado == null)
+        {
+            <p>Cargando empleado...</p>
+        }
+        else
+        {
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">@empleado.Nombre @empleado.Apellido</h5>
+                    <p><b>DPI:</b> @empleado.Dpi</p>
+                    <p><b>Departamento:</b> @empleado.DepartamentoNombre</p>
+                    <p><b>Puesto:</b> @empleado.PuestoNombre</p>
+          
+                    <!-- Puedes agregar más campos aquí -->
+                </div>
+            </div>
 
-    @if (informaciones == null)
-    {
-        <p>Cargando información académica...</p>
-    }
-    else if (!informaciones.Any())
-    {
-        <p>No hay información académica registrada.</p>
-    }
-    else
-    {
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Título</th>
-                    <th>Institución</th>
-                    <th>Fecha de Graduación</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var info in informaciones)
-                {
-                    <tr>
-                        <td>@info.Titulo</td>
-                        <td>@info.Institucion</td>
-                        <td>@info.FechaGraduacion.ToShortDateString()</td>
-                        <td>
-                            <button class="btn btn-danger btn-sm" @onclick="() => EliminarInfo(info.Id)">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-
-    <h5>Agregar Información Académica</h5>
-    <EditForm Model="@nuevaInfo" OnValidSubmit="AgregarInformacionAcademica">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-        <div class="mb-2">
-            <label class="form-label">Título</label>
-            <InputText class="form-control" @bind-Value="nuevaInfo.Titulo" />
-        </div>
-        <div class="mb-2">
-            <label class="form-label">Institución</label>
-            <InputText class="form-control" @bind-Value="nuevaInfo.Institucion" />
-        </div>
-        <div class="mb-2">
-            <label class="form-label">Fecha de Graduación</label>
-            <InputDate class="form-control" @bind-Value="nuevaInfo.FechaGraduacion" />
-        </div>
-        <button class="btn btn-success" type="submit">Agregar</button>
-    </EditForm>
-
-    <h4 class="mt-4">Expediente del Empleado</h4>
-
-    @if (expedienteVal == null)
-    {
-        <p>Cargando estado del expediente...</p>
-    }
-    else if (expedienteVal.ExpedienteCompleto)
-    {
-        <p class="alert alert-success">Expediente completo</p>
-    }
-    else
-    {
-        <p class="alert alert-warning">Faltan documentos: @string.Join(", ", expedienteVal.DocumentosFaltantes)</p>
-    }
-
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Tipo de Documento</th>
-                <th>Archivo</th>
-                <th>Fecha de Subida</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var doc in documentos)
+            <div class="section-title">Información Académica</div>
+            @if (informaciones == null)
             {
-                <tr>
-                    <td>@doc.TipoDocumento</td>
-                    <td>
-                        <a href="@doc.RutaArchivo" target="_blank">Ver archivo</a>
-                    </td>
-                    <td>@doc.FechaSubida.ToShortDateString()</td>
-                    <td>
-                        <a class="btn btn-outline-primary btn-sm" href="@doc.RutaArchivo" target="_blank">Ver</a>
-                        <a class="btn btn-outline-secondary btn-sm ms-1" href="@doc.RutaArchivo" target="_blank" download>Descargar</a>
-                        <button class="btn btn-warning btn-sm ms-1" @onclick="() => EditarDocumento(doc)">Editar</button>
-                        <button class="btn btn-danger btn-sm ms-1" @onclick="() => EliminarDocumento(doc.Id)">Eliminar</button>
-                    </td>
-                </tr>
+                <p>Cargando información académica...</p>
             }
-        </tbody>
-    </table>
+            else if (!informaciones.Any())
+            {
+                <p>No hay información académica registrada.</p>
+            }
+            else
+            {
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Institución</th>
+                            <th>Fecha de Graduación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var info in informaciones)
+                        {
+                            <tr>
+                                <td>@info.Titulo</td>
+                                <td>@info.Institucion</td>
+                                <td>@info.FechaGraduacion.ToShortDateString()</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" @onclick="() => EliminarInfo(info.Id)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
 
-    <h5>Agregar Documento</h5>
-    <EditForm Model="@nuevoDocumento" OnValidSubmit="SubirDocumento">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-        <div class="mb-2">
-            <label>Tipo de Documento</label>
-            <InputSelect class="form-select" @bind-Value="nuevoDocumento.TipoDocumento">
-                <option value="">Seleccione</option>
-                @foreach (var tipo in tiposDocumento)
+            <h5 class="mt-3 mb-2">Agregar Información Académica</h5>
+            <EditForm Model="@nuevaInfo" OnValidSubmit="AgregarInformacionAcademica">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="mb-2">
+                    <label class="form-label">Título</label>
+                    <InputText class="form-control" @bind-Value="nuevaInfo.Titulo" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Institución</label>
+                    <InputText class="form-control" @bind-Value="nuevaInfo.Institucion" />
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Fecha de Graduación</label>
+                    <InputDate class="form-control" @bind-Value="nuevaInfo.FechaGraduacion" />
+                </div>
+                <button class="btn btn-success" type="submit">Agregar</button>
+            </EditForm>
+
+            <div class="section-title">Expediente del Empleado</div>
+            @if (expedienteVal == null)
+            {
+                <p>Cargando estado del expediente...</p>
+            }
+            else if (expedienteVal.ExpedienteCompleto)
+            {
+                <p class="alert alert-success">Expediente completo</p>
+            }
+            else
+            {
+                <p class="alert alert-warning">Faltan documentos: @string.Join(", ", expedienteVal.DocumentosFaltantes)</p>
+            }
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Tipo de Documento</th>
+                        <th>Archivo</th>
+                        <th>Fecha de Subida</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var doc in documentos)
+                    {
+                        var urlDocumento = ConstruirUrlDocumento(doc.RutaArchivo);
+                        var nombreArchivo = System.IO.Path.GetFileName(doc.RutaArchivo);
+                        <tr>
+                            <td>@doc.TipoDocumento</td>
+                            <td>
+                                <a href="@urlDocumento" target="_blank" class="text-decoration-none">
+                                    <i class="bi bi-file-earmark-pdf-fill text-danger" style="font-size: 1.2em; vertical-align: middle;"></i>
+                                </a>
+                            </td>
+                            <td>@doc.FechaSubida.ToShortDateString()</td>
+                            <td class="text-center align-middle">
+                                <div class="btn-group" role="group" aria-label="Acciones">
+                                    <button class="btn btn-outline-primary btn-sm"
+                                            @onclick="@(() => VerDocumento(urlDocumento))">
+                                        Ver
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm"
+                                            @onclick="@(() => DescargarDocumento(urlDocumento, nombreArchivo))">
+                                        Descargar
+                                    </button>
+                                    <button class="btn btn-warning btn-sm"
+                                            @onclick="() => EditarDocumento(doc)">
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-danger btn-sm"
+                                            @onclick="() => EliminarDocumento(doc.Id)">
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <h5 class="mt-3 mb-2">Agregar Documento</h5>
+            <div class="mb-2">
+                <label class="form-label">Tipo de Documento</label>
+                <InputSelect class="form-select" @bind-Value="nuevoDocumento.TipoDocumento">
+                    <option value="">Seleccione</option>
+                    @foreach (var tipo in tiposDocumento)
+                    {
+                        <option value="@tipo">@tipo</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Archivo</label>
+                <InputFile OnChange="OnInputFileChange" accept=".pdf,application/pdf" @key="inputFileKey" />
+                <small class="form-text text-muted">Solo se permiten archivos en formato PDF.</small>
+                @if (!string.IsNullOrWhiteSpace(errorArchivo))
                 {
-                    <option value="@tipo">@tipo</option>
+                    <div class="text-danger mt-1">@errorArchivo</div>
                 }
-            </InputSelect>
+            </div>
+            <button class="btn btn-success"
+                    @onclick="SubirDocumento"
+                    disabled="@(archivoSeleccionado == null || string.IsNullOrWhiteSpace(nuevoDocumento.TipoDocumento))">
+                Subir
+            </button>
+        }
+    </div>
+    @if (editandoDocumento && documentoEditando != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.25)">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Documento</h5>
+                        <button type="button" class="btn-close" @onclick="CancelarEdicionDocumento"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-2">
+                            <label class="form-label">Tipo de Documento</label>
+                            <InputSelect class="form-select" @bind-Value="tipoDocumentoEditando">
+                                <option value="">Seleccione</option>
+                                @foreach (var tipo in tiposDocumento)
+                                {
+                                    <option value="@tipo">@tipo</option>
+                                }
+                            </InputSelect>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label">Archivo (PDF)</label>
+                            <InputFile OnChange="OnInputFileEditChange" accept=".pdf,application/pdf" @key="inputFileEditKey" />
+                            <small class="form-text text-muted">Si no selecciona un archivo, se mantendrá el actual.</small>
+                            @if (!string.IsNullOrWhiteSpace(errorArchivoEditar))
+                            {
+                                <div class="text-danger mt-1">@errorArchivoEditar</div>
+                            }
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="CancelarEdicionDocumento">Cancelar</button>
+                        <button class="btn btn-success"
+                                @onclick="GuardarDocumentoEditado"
+                                disabled="@(string.IsNullOrWhiteSpace(tipoDocumentoEditando))">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="mb-2">
-            <label>Archivo</label>
-            <InputFile OnChange="OnInputFileChange" />
+    }
+    @if (mostrarModal && archivoActual != null)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background:rgba(0,0,0,0.25)">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Ver documento</h5>
+                        <button type="button" class="btn-close" @onclick="CerrarModal"></button>
+                    </div>
+                    <div class="modal-body" style="height:70vh;">
+                        @if (archivoActual.EndsWith(".pdf"))
+                        {
+                            <iframe src="@archivoActual" width="100%" height="100%"></iframe>
+                        }
+                        else
+                        {
+                            <p>Solo vista rápida para PDF. Para otros tipos, descarga el archivo.</p>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
-        <button class="btn btn-success" type="submit">Subir</button>
-    </EditForm>
-}
-
-<button class="btn btn-secondary mt-3" @onclick="VolverALista">Volver a lista</button>
+    }
+</div>
 
 @code {
     [Parameter]
     public int EmpleadoId { get; set; }
+
+    private bool editandoDocumento = false;
+    private DocumentoExpedienteDto? documentoEditando;
+    private string? tipoDocumentoEditando;
+    private IBrowserFile? archivoEditando;
+    private Guid inputFileEditKey = Guid.NewGuid();
+    private string? errorArchivoEditar;
+
+    private void EditarDocumento(DocumentoExpedienteDto doc)
+    {
+        documentoEditando = new DocumentoExpedienteDto
+            {
+                Id = doc.Id,
+                TipoDocumento = doc.TipoDocumento,
+                RutaArchivo = doc.RutaArchivo,
+                FechaSubida = doc.FechaSubida
+            };
+        tipoDocumentoEditando = doc.TipoDocumento;
+        archivoEditando = null;
+        errorArchivoEditar = null;
+        inputFileEditKey = Guid.NewGuid();
+        editandoDocumento = true;
+    }
+
+    private void OnInputFileEditChange(InputFileChangeEventArgs e)
+    {
+        errorArchivoEditar = null;
+        var archivo = e.File;
+        if (archivo == null ||
+            (!archivo.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && archivo.ContentType != "application/pdf"))
+        {
+            errorArchivoEditar = "Solo se permiten archivos PDF.";
+            archivoEditando = null;
+            StateHasChanged();
+            return;
+        }
+        archivoEditando = archivo;
+    }
+
+    private void CancelarEdicionDocumento()
+    {
+        editandoDocumento = false;
+        documentoEditando = null;
+        tipoDocumentoEditando = null;
+        archivoEditando = null;
+        errorArchivoEditar = null;
+    }
+
+    private Guid inputFileKey = Guid.NewGuid();
+
+    private IBrowserFile? archivoSeleccionado;
+    private string? errorArchivo;
+
+    private void OnInputFileChange(InputFileChangeEventArgs e)
+    {
+        errorArchivo = null;
+        var archivo = e.File;
+
+        if (archivo == null ||
+            (!archivo.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && archivo.ContentType != "application/pdf"))
+        {
+            errorArchivo = "Solo se permiten archivos PDF.";
+            archivoSeleccionado = null;
+            StateHasChanged();
+            return;
+        }
+
+        archivoSeleccionado = archivo;
+    }
+
+    private async Task SubirDocumento()
+    {
+        if (archivoSeleccionado == null || string.IsNullOrEmpty(nuevoDocumento.TipoDocumento))
+        {
+            await JS.InvokeVoidAsync("alert", "Seleccione tipo de documento y archivo.");
+            return;
+        }
+
+        errorArchivo = null;
+
+        // Validación extra por seguridad antes de subir
+        if (!archivoSeleccionado.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && archivoSeleccionado.ContentType != "application/pdf")
+        {
+            errorArchivo = "Solo se permiten archivos PDF.";
+            archivoSeleccionado = null;
+            StateHasChanged();
+            return;
+        }
+
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(EmpleadoId.ToString()), "EmpleadoId");
+        content.Add(new StringContent(nuevoDocumento.TipoDocumento), "TipoDocumento");
+        content.Add(new StreamContent(archivoSeleccionado.OpenReadStream(10_000_000)), "Archivo", archivoSeleccionado.Name);
+
+        var response = await Http.PostAsync("https://localhost:7185/api/Expediente/upload", content);
+        if (response.IsSuccessStatusCode)
+        {
+            nuevoDocumento = new();
+            archivoSeleccionado = null;
+            inputFileKey = Guid.NewGuid(); // LIMPIA el InputFile
+            await CargarExpediente();
+        }
+        else
+        {
+            await JS.InvokeVoidAsync("alert", "Error al subir el documento.");
+        }
+    }
+
+    private async Task DescargarDocumento(string url, string nombreArchivo)
+    {
+        await JS.InvokeVoidAsync("descargarArchivo", url, nombreArchivo);
+    }
+
+    private bool mostrarModal = false;
+    private string? archivoActual;
+
+    private void VerDocumento(string url)
+    {
+        archivoActual = url;
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+        archivoActual = null;
+    }
+
+    private string apiBaseUrl = "https://localhost:7185";
+
+    private string ConstruirUrlDocumento(string rutaArchivo)
+    {
+        return $"{apiBaseUrl}{rutaArchivo}";
+    }
 
     // Datos del empleado
     private Empleado? empleado;
@@ -163,7 +546,51 @@ else
     private ExpedienteValidacionDto expedienteVal = new();
     private List<string> tiposDocumento = new();
     private NuevoDocumentoModel nuevoDocumento = new();
-    private IBrowserFile? archivoSeleccionado;
+
+    private async Task GuardarDocumentoEditado()
+    {
+        if (documentoEditando == null) return;
+
+        if (string.IsNullOrWhiteSpace(tipoDocumentoEditando))
+        {
+            errorArchivoEditar = "Debe seleccionar el tipo de documento.";
+            return;
+        }
+
+        // Validar archivo si se seleccionó uno nuevo
+        if (archivoEditando != null &&
+            (!archivoEditando.Name.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) && archivoEditando.ContentType != "application/pdf"))
+        {
+            errorArchivoEditar = "Solo se permiten archivos PDF.";
+            return;
+        }
+
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(documentoEditando.Id.ToString()), "Id");
+        content.Add(new StringContent(tipoDocumentoEditando!), "TipoDocumento");
+
+        if (archivoEditando != null)
+        {
+            content.Add(new StreamContent(archivoEditando.OpenReadStream(10_000_000)), "Archivo", archivoEditando.Name);
+        }
+
+        // Endpoint para editar documento (ajusta según tu API)
+        var response = await Http.PutAsync("https://localhost:7185/api/Expediente/editar", content);
+
+        if (response.IsSuccessStatusCode)
+        {
+            editandoDocumento = false;
+            documentoEditando = null;
+            tipoDocumentoEditando = null;
+            archivoEditando = null;
+            inputFileEditKey = Guid.NewGuid();
+            await CargarExpediente();
+        }
+        else
+        {
+            errorArchivoEditar = "Error al guardar los cambios.";
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -224,56 +651,23 @@ else
         expedienteVal = await Http.GetFromJsonAsync<ExpedienteValidacionDto>($"https://localhost:7185/api/Expediente/validar2/{EmpleadoId}");
     }
 
-    private void OnInputFileChange(InputFileChangeEventArgs e)
-    {
-        archivoSeleccionado = e.File;
-    }
-
-    private async Task SubirDocumento()
-    {
-        if (archivoSeleccionado == null || string.IsNullOrEmpty(nuevoDocumento.TipoDocumento))
-        {
-            await JS.InvokeVoidAsync("alert", "Seleccione tipo de documento y archivo.");
-            return;
-        }
-        var content = new MultipartFormDataContent();
-        content.Add(new StringContent(EmpleadoId.ToString()), "EmpleadoId");
-        content.Add(new StringContent(nuevoDocumento.TipoDocumento), "TipoDocumento");
-        content.Add(new StreamContent(archivoSeleccionado.OpenReadStream(10_000_000)), "Archivo", archivoSeleccionado.Name);
-
-        var response = await Http.PostAsync("https://localhost:7185/api/Expediente/upload", content);
-        if (response.IsSuccessStatusCode)
-        {
-            nuevoDocumento = new();
-            archivoSeleccionado = null;
-            await CargarExpediente();
-        }
-        else
-        {
-            await JS.InvokeVoidAsync("alert", "Error al subir el documento.");
-        }
-    }
-
     private async Task EliminarDocumento(int documentoId)
     {
         var confirm = await JS.InvokeAsync<bool>("confirm", "¿Eliminar este documento?");
         if (!confirm) return;
 
         var response = await Http.DeleteAsync($"https://localhost:7185/api/Expediente/{documentoId}");
+
         if (response.IsSuccessStatusCode)
         {
+            await JS.InvokeVoidAsync("alert", "Documento eliminado.");
             await CargarExpediente();
         }
         else
         {
-            await JS.InvokeVoidAsync("alert", "No se pudo eliminar el documento.");
+            var error = await response.Content.ReadAsStringAsync();
+            await JS.InvokeVoidAsync("alert", $"No se pudo eliminar. Detalle: {error}");
         }
-    }
-
-    private void EditarDocumento(DocumentoExpedienteDto doc)
-    {
-        // Aquí abres un modal similar al de subir, pero rellenas el modelo con los datos de doc
-        // Si necesitas el código para editar, ¡pídemelo y te lo armo completo!
     }
 
     void VolverALista() => Navigation.NavigateTo("/empleados");
@@ -301,7 +695,10 @@ else
         public string Apellido { get; set; }
         public string Dpi { get; set; }
         public int DepartamentoId { get; set; }
+        public string DepartamentoNombre { get; set; }
         public int PuestoId { get; set; }
+        public string PuestoNombre { get; set; }
+
     }
     public class DocumentoExpedienteDto
     {
